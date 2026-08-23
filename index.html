@@ -134,7 +134,6 @@
       <form id="patientForm" onsubmit="handleSavePatient(event)" class="p-5 overflow-y-auto space-y-4 text-xs">
         <input type="hidden" id="editPatientId" value="">
 
-        <!-- DEMOGRAPHICS -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Ward *</label>
@@ -209,24 +208,24 @@
               </div>
             </div>
             
-            <!-- Hidden inputs: One for Camera, One for Gallery -->
-            <input type="file" id="mainScanCamera" accept="image/*" capture="environment" multiple class="hidden" onchange="handleScanFilesSelected(event)">
-            <input type="file" id="mainScanGallery" accept="image/*" multiple class="hidden" onchange="handleScanFilesSelected(event)">
+            <input type="file" id="mainScanCamera" accept="image/*" capture="environment" class="hidden" onchange="handleScanFilesSelected(event)">
+            <input type="file" id="mainScanGallery" accept="image/*" class="hidden" onchange="handleScanFilesSelected(event)">
             
             <div class="grid grid-cols-2 gap-2 mt-2">
               <button type="button" onclick="document.getElementById('mainScanCamera').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center justify-center gap-1"><i class="fa-solid fa-camera"></i> Camera</button>
               <button type="button" onclick="document.getElementById('mainScanGallery').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center justify-center gap-1"><i class="fa-solid fa-image"></i> Gallery</button>
             </div>
             
-            <button type="button" id="ocrMainScanBtn" onclick="runMainScanGeminiOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold mt-1 cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
+            <button type="button" id="ocrMainScanBtn" onclick="runMainScanGeminiOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold mt-1 cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read</button>
             
             <div id="mainScanOcrProgress" style="display: none;" class="text-[10px] text-indigo-700 font-bold mt-1 text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Extracting text via AI...</div>
 
             <div class="flex items-center justify-between mt-2 pt-2 border-t border-indigo-100">
                <span id="tempScanFileName" class="text-[10px] text-slate-500 italic truncate max-w-xs">No scan attached</span>
-               <button type="button" onclick="addScansToTempList()" class="bg-indigo-800 text-white py-1 px-3 rounded text-xs font-semibold cursor-pointer shadow-sm">Save to File</button>
+               <button type="button" onclick="addScansToTempList()" class="bg-indigo-800 text-white py-1 px-3 rounded text-xs font-semibold cursor-pointer shadow-sm">Save Scan to File</button>
             </div>
           </div>
+          <!-- Already Saved Scans (Now with OCR button) -->
           <div id="stagedScansContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 empty:hidden"></div>
         </div>
 
@@ -285,15 +284,16 @@
                 <button type="button" onclick="document.getElementById('mainOpCamera').click()" class="bg-purple-100 text-purple-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer"><i class="fa-solid fa-camera"></i> Camera</button>
                 <button type="button" onclick="document.getElementById('mainOpGallery').click()" class="bg-purple-100 text-purple-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer"><i class="fa-solid fa-image"></i> Gallery</button>
               </div>
-              <button type="button" id="ocrOpinionBtn" onclick="runOpinionGeminiOCR()" class="w-full bg-purple-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
+              <button type="button" id="ocrOpinionBtn" onclick="runOpinionGeminiOCR()" class="w-full bg-purple-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read</button>
               
               <div id="opinionOcrProgress" style="display: none;" class="text-[10px] text-purple-800 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin text-purple-600 mr-1"></i> Transcribing via AI...</div>
               <div id="opinionPhotoThumb" style="display: none;" class="mt-1"></div>
             </div>
             
             <textarea id="opinionAdvice" rows="2" placeholder="Advice..." class="w-full text-xs border border-purple-300 rounded-lg p-2 focus:outline-none font-mono"></textarea>
-            <div class="flex justify-end"><button type="button" onclick="addOpinionToTempList()" class="bg-purple-700 text-white font-semibold py-1 px-3 rounded-lg text-xs cursor-pointer">+ Add</button></div>
+            <div class="flex justify-end"><button type="button" onclick="addOpinionToTempList()" class="bg-purple-700 text-white font-semibold py-1 px-3 rounded-lg text-xs cursor-pointer">+ Add to File</button></div>
           </div>
+          <!-- Already Saved Opinions (Now with OCR button) -->
           <div id="opinionListContainer" class="space-y-2 pt-1 empty:hidden"></div>
         </div>
 
@@ -349,8 +349,8 @@
           </div>
         </div>
         
-        <input type="file" id="qsCamInput" accept="image/*" capture="environment" multiple class="hidden" onchange="handleQuickScanFilesSelected(event)">
-        <input type="file" id="qsGalInput" accept="image/*" multiple class="hidden" onchange="handleQuickScanFilesSelected(event)">
+        <input type="file" id="qsCamInput" accept="image/*" capture="environment" class="hidden" onchange="handleQuickScanFilesSelected(event)">
+        <input type="file" id="qsGalInput" accept="image/*" class="hidden" onchange="handleQuickScanFilesSelected(event)">
         
         <div class="grid grid-cols-2 gap-2 pt-2 mt-1 border-t border-slate-100">
           <button type="button" onclick="document.getElementById('qsCamInput').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-2 rounded shadow-sm font-bold cursor-pointer"><i class="fa-solid fa-camera"></i> Camera</button>
@@ -362,7 +362,7 @@
         <div id="quickScanOcrProgress" style="display:none;" class="text-[10px] text-indigo-600 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Extracting findings...</div>
         
         <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium">
-           <span id="quickScanFileName">No files selected</span>
+           <span id="quickScanFileName">No image attached</span>
         </div>
         
         <button type="button" onclick="saveQuickScans()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg shadow-sm mt-2 cursor-pointer">Save to Patient File</button>
@@ -428,6 +428,9 @@
   <div id="bulkDrainsModal" class="modal p-3 sm:p-4"><div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto"><div class="flex items-center justify-between p-4 bg-slate-900 text-white"><h3 class="text-sm font-bold">Bulk Drains Parser</h3><button type="button" onclick="closeBulkDrainsModal()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button></div><div class="p-4 space-y-3 text-xs"><textarea id="rawDrainsInput" rows="8" placeholder="Paste drains..." class="w-full font-mono text-xs border border-slate-300 rounded-lg p-3"></textarea><button type="button" onclick="processBulkDrainsBatch()" class="w-full bg-slate-900 text-white font-semibold py-2.5 rounded-lg cursor-pointer">Auto-Match</button></div></div></div>
 
   <script>
+    // ==========================================
+    // GLOBALS & CONFIG
+    // ==========================================
     const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
 
     const firebaseConfig = {
@@ -470,7 +473,7 @@
     const currentMonthStr = todayISO.substring(0, 7);
 
     // ==========================================
-    // SELF-HEALING "UNDEFINED" BUG FIX
+    // AUTO-HEALING "UNDEFINED" FUNCTION
     // ==========================================
     function scrubUndefinedNames(pts) {
       pts.forEach(p => {
@@ -481,6 +484,9 @@
       return pts;
     }
 
+    // ==========================================
+    // INITIALIZATION & SYNC
+    // ==========================================
     window.addEventListener('DOMContentLoaded', () => {
       if (document.getElementById('selectedMonth')) document.getElementById('selectedMonth').value = currentMonthStr;
       try {
@@ -516,6 +522,9 @@
       if (isFirebaseReady) db.ref('ward_census_data').set(patients).catch(console.error);
     }
 
+    // ==========================================
+    // TAB CONTROLS & UI
+    // ==========================================
     function switchMainTab(t) {
       currentMainTab = t;
       ['patients','handover','todo'].forEach(x => {
@@ -562,7 +571,9 @@
     function openImageModal(src, cap) { document.getElementById('modalImg').src = src; document.getElementById('modalCaption').innerText = cap; document.getElementById('imageModal').classList.add('active'); }
     function closeImageModal() { document.getElementById('imageModal').classList.remove('active'); }
 
-    // --- GEMINI AI CORE ---
+    // ==========================================
+    // GEMINI AI CORE API 
+    // ==========================================
     async function callGeminiAI(base64Image) {
       const cleanBase64 = base64Image.split(',')[1] || base64Image;
       const payload = {
@@ -579,7 +590,39 @@
       throw new Error("OCR Fail");
     }
 
-    // --- MAIN MODAL SCANS ---
+    // ==========================================
+    // NEW: RUN OCR ON ALREADY-SAVED SCANS/OPINIONS
+    // ==========================================
+    async function runOCRForExistingScan(id) {
+      const s = currentScans.find(x => x.id === id);
+      if(!s || !s.data) return;
+      const prog = document.getElementById(`ocrProgScan_${id}`);
+      if(prog) prog.style.display = 'block';
+      try {
+        const r = await callGeminiAI(s.data);
+        s.description = s.description ? `${s.description} | ${r}` : r;
+        renderStagedScansList();
+      } catch(e) { alert("AI Read Failed. Check API Key or Image clarity."); }
+      if(prog) prog.style.display = 'none';
+    }
+
+    async function runOCRForExistingOpinion(i) {
+      const o = currentOpinions[i];
+      if(!o || !o.photo) return;
+      const prog = document.getElementById(`ocrProgOp_${i}`);
+      if(prog) prog.style.display = 'block';
+      try {
+        const r = await callGeminiAI(o.photo.data);
+        o.advice = o.advice ? `${o.advice}\n\n${r}` : r;
+        renderTempOpinionList();
+      } catch(e) { alert("AI Read Failed. Check API Key or Image clarity."); }
+      if(prog) prog.style.display = 'none';
+    }
+
+
+    // ==========================================
+    // MAIN MODAL: SCANS & LABS
+    // ==========================================
     function handleScanFilesSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -621,12 +664,18 @@
 
     function renderStagedScansList() {
       document.getElementById('stagedScansContainer').innerHTML = currentScans.map((s) => `
-        <div class="flex items-center justify-between p-2 bg-white border border-indigo-200 rounded-lg">
-          <div class="flex items-center gap-2 overflow-hidden">
-            <img src="${s.data}" onclick="openImageModal('${s.data}','${s.type}')" class="w-10 h-10 rounded object-cover border cursor-pointer flex-shrink-0" />
-            <div class="truncate"><span class="font-bold text-indigo-900 block truncate">${s.type}</span><span class="text-[10px] text-slate-500 truncate block">${s.description}</span></div>
+        <div class="flex flex-col p-2 bg-white border border-indigo-200 rounded-lg shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 overflow-hidden">
+              <img src="${s.data}" onclick="openImageModal('${s.data}','${s.type}')" class="w-10 h-10 rounded object-cover border cursor-pointer flex-shrink-0" />
+              <div class="truncate"><span class="font-bold text-indigo-900 block truncate">${s.type}</span><span class="text-[10px] text-slate-500 truncate block">${s.description}</span></div>
+            </div>
+            <div class="flex gap-2 items-center">
+              <button type="button" onclick="runOCRForExistingScan(${s.id})" class="text-indigo-600 cursor-pointer bg-indigo-50 px-2 py-1 rounded text-[10px] font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Read</button>
+              <button type="button" onclick="currentScans=currentScans.filter(x=>x.id!==${s.id});renderStagedScansList();" class="text-rose-500 cursor-pointer p-1"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
           </div>
-          <button type="button" onclick="currentScans=currentScans.filter(x=>x.id!==${s.id});renderStagedScansList();" class="text-rose-500 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+          <div id="ocrProgScan_${s.id}" style="display:none;" class="text-[9px] text-indigo-600 mt-1 text-center font-bold"><i class="fa-solid fa-spinner fa-spin"></i> Extracting text...</div>
         </div>
       `).join('');
     }
@@ -635,7 +684,9 @@
       if (confirm("Delete scan?")) { const p = patients.find(x => x.id === pid); if (p && p.scans) { p.scans = p.scans.filter(s => s.id !== sid); saveToStorage(); updateUI(); } }
     }
 
-    // --- QUICK SCAN MODAL ---
+    // ==========================================
+    // QUICK SCAN MODAL
+    // ==========================================
     function openQuickScanModal(id) {
       document.getElementById('quickScanPatientId').value = id;
       quickScanFilesObj = null;
@@ -682,7 +733,9 @@
       } else { alert("Select an image."); }
     }
 
-    // --- MAIN MODAL OPINIONS ---
+    // ==========================================
+    // MAIN MODAL: OPINIONS
+    // ==========================================
     function handleOpinionPhotoSelected(e) {
       const f = e.target.files[0];
       if (!f) return;
@@ -703,6 +756,7 @@
     function clearTempOpinionPhoto() {
       tempOpinionPhoto = null; document.getElementById('tempOpinionPhotoName').innerText = 'No image';
       document.getElementById('ocrOpinionBtn').disabled = true; document.getElementById('opinionPhotoThumb').style.display = 'none';
+      document.getElementById('opinionAdvice').value = '';
     }
 
     async function runOpinionGeminiOCR() {
@@ -728,12 +782,23 @@
 
     function renderTempOpinionList() {
       document.getElementById('opinionListContainer').innerHTML = currentOpinions.map((o, i) => {
-        const pb = o.photo ? `<div class="mt-1 flex gap-1"><img src="${o.photo.data}" onclick="openImageModal('${o.photo.data}','')" class="w-6 h-6 object-cover border cursor-pointer" /></div>` : '';
+        const pb = o.photo ? `
+          <div class="mt-1 pt-1 border-t border-purple-100 flex items-center justify-between gap-1.5">
+            <div class="flex items-center gap-1">
+              <span class="text-[10px] font-semibold text-purple-700"><i class="fa-solid fa-paperclip"></i></span>
+              <img src="${o.photo.data}" onclick="openImageModal('${o.photo.data}','')" class="w-6 h-6 rounded object-cover border border-purple-300 cursor-pointer" />
+            </div>
+            <button type="button" onclick="runOCRForExistingOpinion(${i})" class="text-[10px] bg-purple-100 text-purple-800 px-2 py-1 rounded font-bold cursor-pointer"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Read</button>
+          </div>
+          <div id="ocrProgOp_${i}" style="display:none;" class="text-[9px] text-purple-600 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin"></i> Transcribing...</div>
+        ` : '';
         return `<div class="bg-white border rounded p-2 text-xs"><div class="flex justify-between font-bold border-b pb-1 mb-1"><span>${o.dept} (${o.reason})</span><button type="button" onclick="removeOpinionFromTempList(${i})" class="text-rose-500"><i class="fa-solid fa-trash-can"></i></button></div><div class="whitespace-pre-line">${o.advice}</div>${pb}</div>`;
       }).join('');
     }
 
-    // --- QUICK OPINION MODAL ---
+    // ==========================================
+    // QUICK OPINION MODAL
+    // ==========================================
     function openQuickOpinionModal(id) {
       document.getElementById('quickOpinionPatientId').value = id; quickOpinionPhotoObj = null;
       document.getElementById('quickOpReason').value = ''; document.getElementById('quickOpAdvice').value = '';
@@ -769,7 +834,9 @@
       }
     }
 
-    // --- OTHER MODALS ---
+    // ==========================================
+    // OTHER LOGISTICS MODALS
+    // ==========================================
     function openQuickDietModal(id) { const p = patients.find(x=>x.id===id); if(p) { document.getElementById('quickDietPatientId').value=id; document.getElementById('quickDietText').value=p.diet||''; document.getElementById('quickDietModal').classList.add('active'); } }
     function closeQuickDietModal() { document.getElementById('quickDietModal').classList.remove('active'); }
     function setQuickDietPreset(t) { document.getElementById('quickDietText').value=t; }
@@ -787,6 +854,9 @@
     function closeQuickIOModal() { document.getElementById('quickIOModal').classList.remove('active'); }
     function saveQuickIO() { const p=patients.find(x=>x.id===parseInt(document.getElementById('quickIOPatientId').value)); if(p){ p.inputVol=document.getElementById('quickInputVol').value; p.outputVol=document.getElementById('quickOutputVol').value; p.netBalance=document.getElementById('quickNetBalance').value; saveToStorage(); updateUI(); closeQuickIOModal(); } }
 
+    // ==========================================
+    // MAIN PATIENT SAVING & RENDERING
+    // ==========================================
     function setProcedureDateToday() { document.getElementById('surgeryDate').value=todayISO; }
     function setTempProcToday() { document.getElementById('tempProcDate').value=todayISO; }
 
@@ -808,7 +878,6 @@
     }
     function closePatientModal() { document.getElementById('patientModal').classList.remove('active'); }
 
-    // --- SAVE PATIENT CORE FIX ---
     function handleSavePatient(e) {
       e.preventDefault(); 
       const id = document.getElementById('editPatientId').value; 
