@@ -662,7 +662,12 @@
       tempScanFilesData.forEach(item => { currentScans.push({ id: Date.now() + Math.random(), type, description: desc || 'Report', fileName: item.name, data: item.data, uploadedDate: todayISO }); });
       tempScanFilesData = []; tempMainScanPhotoObj = null;
       document.getElementById('tempScanFileName').innerText = 'No scan attached'; document.getElementById('scanDescription').value = '';
-      document.getElementById('scanFileInput').value = '';
+      
+      const cam = document.getElementById('mainScanCamera');
+      if (cam) cam.value = '';
+      const gal = document.getElementById('mainScanGallery');
+      if (gal) gal.value = '';
+      
       document.getElementById('ocrMainScanBtn').disabled = true;
       renderStagedScansList();
     }
@@ -696,7 +701,14 @@
       document.getElementById('quickScanPatientId').value = id;
       quickScanFilesObj = null;
       document.getElementById('quickScanDesc').value = ''; document.getElementById('quickScanFileName').innerText = 'None';
-      document.getElementById('quickScanOcrBtn').disabled = true; document.getElementById('quickScanModal').classList.add('active');
+      document.getElementById('quickScanOcrBtn').disabled = true; 
+      
+      const cam = document.getElementById('qsCamInput');
+      if (cam) cam.value = '';
+      const gal = document.getElementById('qsGalInput');
+      if (gal) gal.value = '';
+      
+      document.getElementById('quickScanModal').classList.add('active');
     }
     function closeQuickScanModal() { document.getElementById('quickScanModal').classList.remove('active'); }
 
@@ -762,6 +774,11 @@
       tempOpinionPhoto = null; document.getElementById('tempOpinionPhotoName').innerText = 'No image';
       document.getElementById('ocrOpinionBtn').disabled = true; document.getElementById('opinionPhotoThumb').style.display = 'none';
       document.getElementById('opinionAdvice').value = '';
+      
+      const cam = document.getElementById('mainOpCamera');
+      if (cam) cam.value = '';
+      const gal = document.getElementById('mainOpGallery');
+      if (gal) gal.value = '';
     }
 
     async function runOpinionGeminiOCR() {
@@ -807,7 +824,14 @@
     function openQuickOpinionModal(id) {
       document.getElementById('quickOpinionPatientId').value = id; quickOpinionPhotoObj = null;
       document.getElementById('quickOpReason').value = ''; document.getElementById('quickOpAdvice').value = '';
-      document.getElementById('quickOpOcrBtn').disabled = true; document.getElementById('quickOpinionModal').classList.add('active');
+      document.getElementById('quickOpOcrBtn').disabled = true; 
+      
+      const cam = document.getElementById('qoCamInput');
+      if (cam) cam.value = '';
+      const gal = document.getElementById('qoGalInput');
+      if (gal) gal.value = '';
+      
+      document.getElementById('quickOpinionModal').classList.add('active');
     }
     function closeQuickOpinionModal() { document.getElementById('quickOpinionModal').classList.remove('active'); }
 
