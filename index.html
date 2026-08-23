@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>SURGIX Pro | Ward Suite & Clinical Console</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  
+  <!-- Standalone Firebase v8 Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .modal { display: none; position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; background-color: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); }
+    .modal.active { display: flex !important; }
+    @keyframes pulse-emergency { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .emergency-pulse { animation: pulse-emergency 1.8s infinite; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen pb-24">
+
+  <!-- TOP HEADER -->
+  <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-lg bg-slate-900 text-teal-400 flex items-center justify-center text-base shadow-sm ring-1 ring-slate-800">
+          <i class="fa-solid fa-notes-medical"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm font-bold tracking-tight text-slate-900">SURGIX<span class="text-teal-600 font-semibold ml-0.5">PRO</span></h1>
+            <span id="syncBadge" class="bg-slate-100 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded border border-slate-200 flex items-center gap-1">
+              CONNECTING...
+            </span>
+          </div>
+          <p class="text-[10px] text-slate-400 font-medium leading-none">Shared Inpatient Database, I/O & Handover Suite</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <div class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-1.5 rounded-lg text-slate-700">
+          <i class="fa-regular fa-calendar text-slate-500 text-xs"></i>
+          <input type="month" id="selectedMonth" onchange="renderMonthlyDashboard()" class="bg-transparent text-[11px] font-semibold text-slate-700 outline-none cursor-pointer" />
+        </div>
+
+        <button type="button" onclick="openBulkVitalsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer">
+          <i class="fa-solid fa-heart-pulse text-rose-500"></i> <span class="hidden md:inline">Vitals</span>
+        </button>
+
+        <button type="button" onclick="openBulkCBGModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer">
+          <i class="fa-solid fa-droplet text-blue-500"></i> <span class="hidden md:inline">CBG</span>
+        </button>
+
+        <button type="button" onclick="openBulkDrainsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer">
+          <i class="fa-solid fa-faucet-drip text-teal-600"></i> <span class="hidden md:inline">Drains</span>
+        </button>
+
+        <button type="button" onclick="openMonthlyStatsModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition cursor-pointer">
+          <i class="fa-solid fa-chart-pie text-indigo-500"></i> <span class="hidden md:inline">Census</span>
+        </button>
+
+        <button type="button" onclick="openPatientModal()" class="bg-teal-600 hover:bg-teal-700 active:scale-95 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition cursor-pointer ml-1">
+          <i class="fa-solid fa-plus text-xs"></i> New Admission
+        </button>
+      </div>
+    </div>
+
+    <!-- PRIMARY MAIN TABS -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 flex border-t border-slate-200/80 overflow-x-auto gap-2 pt-1 pb-0 text-xs font-semibold">
+      <button type="button" id="tabBtn-patients" onclick="switchMainTab('patients')" class="py-2.5 px-3.5 border-b-2 border-teal-600 text-teal-700 flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <i class="fa-solid fa-bed-pulse"></i> Inpatients & Wards (<span id="tabCensusBadge">0</span>)
+      </button>
+      <button type="button" id="tabBtn-handover" onclick="switchMainTab('handover')" class="py-2.5 px-3.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <i class="fa-solid fa-file-medical"></i> Surgical Handover
+      </button>
+      <button type="button" id="tabBtn-todo" onclick="switchMainTab('todo')" class="py-2.5 px-3.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+        <i class="fa-solid fa-list-check"></i> Daily To-Do List (<span id="tabTodoBadge">0</span>)
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN TAB CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-4">
+    
+    <!-- TAB 1: INPATIENTS -->
+    <section id="tabContent-patients" class="space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3 flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5 flex-wrap">
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-filter text-teal-600"></i> Ward Filter:
+          </span>
+          <div id="wardSubTabsContainer" class="flex flex-wrap gap-1 text-xs"></div>
+        </div>
+
+        <div id="patientListContainer" class="space-y-3 max-h-[750px] overflow-y-auto">
+          <p class="text-xs text-slate-400 italic py-12 text-center">Loading shared ward census...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: SURGICAL HANDOVER -->
+    <section id="tabContent-handover" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col max-w-4xl mx-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 gap-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-file-medical text-teal-600 text-lg"></i>
+            <div>
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Surgical Handover Format</h2>
+              <p class="text-[10px] text-slate-400">Ready for WhatsApp / rounds</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="copyHandover()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer">
+              <i class="fa-regular fa-copy"></i> Copy Text
+            </button>
+            <button type="button" onclick="sendHandoverWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer shadow-sm">
+              <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
+            </button>
+          </div>
+        </div>
+        <textarea id="outputArea" readonly class="w-full h-[600px] bg-slate-950 text-slate-200 p-4 rounded-xl font-mono text-xs leading-relaxed focus:outline-none resize-none border border-slate-900 shadow-inner selection:bg-teal-800"></textarea>
+      </div>
+    </section>
+
+    <!-- TAB 3: DEDICATED TO-DO LIST -->
+    <section id="tabContent-todo" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col max-w-4xl mx-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 gap-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-indigo-600 text-lg"></i>
+            <div>
+              <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Daily Ward To-Do List</h2>
+              <p class="text-[10px] text-slate-400">Pending tasks & lab orders</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="copyTodoList()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer">
+              <i class="fa-regular fa-copy"></i> Copy Tasks
+            </button>
+            <button type="button" onclick="sendTodoWhatsApp()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer shadow-sm">
+              <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
+            </button>
+          </div>
+        </div>
+        <textarea id="todoOutputArea" readonly class="w-full h-[600px] bg-slate-950 text-indigo-200 p-4 rounded-xl font-mono text-xs leading-relaxed focus:outline-none resize-none border border-slate-900 shadow-inner selection:bg-indigo-900"></textarea>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PATIENT ADMISSION / EDIT MODAL -->
+  <div id="patientModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-3xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] my-auto">
+      
+      <div class="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-doctor text-teal-400 text-sm"></i>
+          <h3 id="modalTitle" class="text-sm font-bold tracking-tight">Inpatient Clinical File</h3>
+        </div>
+        <button type="button" onclick="closePatientModal()" class="text-slate-400 hover:text-white transition p-1 cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+      </div>
+
+      <form id="patientForm" onsubmit="handleSavePatient(event)" class="p-5 overflow-y-auto space-y-4 text-xs">
+        <input type="hidden" id="editPatientId" value="">
+
+        <!-- WARD & DEMOGRAPHICS -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Ward / Location *</label>
+            <select id="wardCategory" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium" required>
+              <optgroup label="Surgical Wards & ICUs">
+                <option value="MSW" selected>MSW (Male Surgical)</option>
+                <option value="FSW">FSW (Female Surgical)</option>
+                <option value="Corporate">Corporate</option>
+                <option value="SICU">SICU (Surgical ICU)</option>
+                <option value="GICU">GICU (General ICU)</option>
+                <option value="IA">IA (Intermediate Area)</option>
+              </optgroup>
+              <optgroup label="Specialties">
+                <option value="ORTHO">Orthopaedics (ORTHO)</option>
+                <option value="OBG">Obstetrics & Gynae (OBG)</option>
+                <option value="NSGY">Neurosurgery (NSGY)</option>
+                <option value="SURG_ONCO">Surgical Oncology</option>
+                <option value="ENT">ENT</option>
+                <option value="OPHTHAL">Ophthalmology</option>
+                <option value="UROLOGY">Urology</option>
+                <option value="PLAST">Plastic Surgery</option>
+                <option value="GM">General Medicine (GM)</option>
+                <option value="MED_ONCO">Medical Oncology</option>
+                <option value="DERMAT">Dermatology</option>
+                <option value="Paediatric">Paediatric Ward</option>
+              </optgroup>
+              <optgroup label="Disposition">
+                <option value="DayCare">⚡ Day Care</option>
+                <option value="Discharges">Discharges</option>
+                <option value="Transfer out">Transfer Out</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Patient Name *</label>
+            <input type="text" id="patientName" placeholder="e.g. Mr. Ravichandran" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium" required />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Age *</label>
+              <input type="text" id="age" placeholder="58" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none" required />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Gender *</label>
+              <select id="gender" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none" required>
+                <option value="M">Male (M)</option>
+                <option value="F">Female (F)</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">MRD / UHID No.</label>
+            <input type="text" id="hospitalNo" placeholder="e.g. MRD-84920" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Admission No. (IP No.)</label>
+            <input type="text" id="admissionNo" placeholder="e.g. IP-142817" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-teal-50/40 p-3 rounded-xl border border-teal-200/80">
+          <div>
+            <label class="block font-bold text-teal-950 mb-1">Date of Admission (DOA) *</label>
+            <input type="date" id="admissionDate" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none" required />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="font-bold text-teal-950">Date of Procedure (POD# 0)</label>
+              <button type="button" onclick="setProcedureDateToday()" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white font-semibold px-2 py-0.5 rounded shadow-sm cursor-pointer">Today</button>
+            </div>
+            <input type="date" id="surgeryDate" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Primary Diagnosis *</label>
+          <input type="text" id="diagnosis" placeholder="e.g. Diabetic Foot Ulcer Right / Acute Appendicitis" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium" required />
+        </div>
+
+        <!-- PROCEDURES TIMELINE -->
+        <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-200 space-y-2.5">
+          <label class="font-bold text-amber-950 block">Surgical Procedures Timeline (S/P)</label>
+          <div class="bg-white p-2.5 rounded-lg border border-amber-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+              <div class="sm:col-span-6">
+                <input type="text" id="tempProcName" placeholder="Procedure Name (e.g. Debridement)" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-slate-50 focus:bg-white focus:outline-none" />
+              </div>
+              <div class="sm:col-span-4 flex items-center gap-1">
+                <input type="date" id="tempProcDate" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-slate-50 focus:bg-white focus:outline-none" />
+                <button type="button" onclick="setTempProcToday()" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2 py-1.5 rounded cursor-pointer whitespace-nowrap">Today</button>
+              </div>
+              <div class="sm:col-span-2">
+                <button type="button" onclick="addProcedureToTempList()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded text-xs flex items-center justify-center gap-1 shadow-sm cursor-pointer">+ Add</button>
+              </div>
+            </div>
+          </div>
+          <div id="stagedProceduresContainer" class="space-y-1.5 pt-1 empty:hidden"></div>
+        </div>
+
+        <!-- UPLOAD & MANAGE SCAN REPORTS / INVESTIGATIONS -->
+        <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-200 space-y-3">
+          <div class="flex items-center justify-between border-b border-indigo-200/60 pb-1.5">
+            <label class="font-bold text-indigo-950 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-waveform text-indigo-600"></i> Scan & Radiology Reports Manager
+            </label>
+          </div>
+
+          <div class="bg-white p-3 rounded-lg border border-indigo-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Study Type</label>
+                <select id="scanReportType" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-slate-50 focus:outline-none font-medium">
+                  <option value="CT Scan">CT Scan</option>
+                  <option value="MRI">MRI</option>
+                  <option value="X-Ray">X-Ray</option>
+                  <option value="USG Abdomen">USG Abdomen</option>
+                  <option value="Blood Labs">Blood Labs / CBC</option>
+                  <option value="Culture Swab">Culture Swab</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">Key Finding</label>
+                <input type="text" id="scanDescription" placeholder="e.g. Distended appendix with fat stranding" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-white focus:outline-none" />
+              </div>
+            </div>
+
+            <input type="file" id="scanFileInput" accept="image/*" capture="environment" multiple class="hidden" onchange="handleScanFilesSelected(event)">
+
+            <div class="flex items-center justify-between gap-2 pt-1">
+              <button type="button" onclick="document.getElementById('scanFileInput').click()" class="bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-300 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-camera"></i> Snap / Upload Scans
+              </button>
+              <span id="tempScanFileName" class="text-[11px] text-slate-500 italic truncate max-w-xs">No scan selected</span>
+              <button type="button" onclick="addScansToTempList()" class="bg-indigo-600 hover:bg-indigo-700 text-white py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-upload"></i> Save Scan
+              </button>
+            </div>
+          </div>
+
+          <div id="stagedScansContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 empty:hidden"></div>
+        </div>
+
+        <!-- Plan & TO-DO -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Primary Clinical Plan</label>
+            <input type="text" id="patientPlan" placeholder="e.g. Plan SSG / Suture Removal" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-bold text-indigo-950 mb-1">Today's To-Do Task</label>
+            <input type="text" id="todoToday" placeholder="e.g. Send CBC, Review Drain at 3 PM" class="w-full text-xs border border-indigo-300 rounded-lg p-2.5 bg-indigo-50/20 focus:outline-none font-medium" />
+          </div>
+        </div>
+
+        <!-- INPUT / OUTPUT (I/O) BALANCE SECTION -->
+        <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 space-y-2">
+          <label class="font-bold text-emerald-950 block border-b border-emerald-200 pb-1">
+            <i class="fa-solid fa-scale-balanced text-emerald-600 mr-1"></i> 24-Hour Input / Output (I/O) Balance
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[10px] font-semibold text-emerald-900 mb-0.5">Total Intake (IV + Oral)</label>
+              <input type="text" id="inputVol" placeholder="e.g. 2400 ml" class="w-full text-xs border border-emerald-300 rounded-lg p-2 bg-white font-mono focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-emerald-900 mb-0.5">Total Output (Urine + DT + RT)</label>
+              <input type="text" id="outputVol" placeholder="e.g. 1850 ml" class="w-full text-xs border border-emerald-300 rounded-lg p-2 bg-white font-mono focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-emerald-900 mb-0.5">Net Balance</label>
+              <input type="text" id="netBalance" placeholder="e.g. +550 ml" class="w-full text-xs border border-emerald-300 rounded-lg p-2 bg-white font-mono font-bold focus:outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- CBG Tracker -->
+        <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-200 space-y-2">
+          <label class="font-bold text-blue-950 block">CBG / Glycemic Control</label>
+          <div class="flex items-center gap-2">
+            <input type="text" id="cbg" placeholder="e.g. 142mg/dl-OHA" class="flex-1 text-xs border border-blue-300 rounded-lg p-2 bg-white focus:outline-none font-mono" />
+            <span id="cbgWarning" class="text-[10px] font-bold hidden whitespace-nowrap"></span>
+          </div>
+        </div>
+
+        <!-- Drains & Lines -->
+        <div class="bg-teal-50/50 p-3 rounded-xl border border-teal-200 space-y-2">
+          <label class="font-bold text-teal-950 block border-b border-teal-200 pb-1">Drains & Invasive Lines</label>
+          <input type="text" id="drainOutput" placeholder="DT: ~50ml serosanguinous / 12h" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none mb-1" />
+          <input type="text" id="foleyStatus" placeholder="Foley: CBD draining clear urine" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none mb-1" />
+          <input type="text" id="rtStomaStatus" placeholder="RT / Stoma: Nil aspirate" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none" />
+        </div>
+
+        <!-- SPECIALTY OPINIONS & GEMINI OCR -->
+        <div class="bg-purple-50/60 p-3 rounded-xl border border-purple-200 space-y-2.5">
+          <label class="font-bold text-purple-950 block border-b border-purple-200 pb-1">Cross-Consultation Opinions</label>
+          <div class="space-y-2 bg-white p-2.5 rounded-lg border border-purple-200">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <select id="opinionDept" class="w-full text-xs border border-purple-300 rounded-lg p-1.5 bg-purple-50/30 focus:outline-none font-medium">
+                  <optgroup label="Surgical Specialties">
+                    <option value="ENT">ENT</option>
+                    <option value="OPHTHALMOLOGY">OPHTHALMOLOGY</option>
+                    <option value="OBG">OBG</option>
+                    <option value="SURGICAL ONCOLOGY">SURGICAL ONCOLOGY</option>
+                    <option value="UROLOGY">UROLOGY</option>
+                    <option value="NEURO SURGERY">NEURO SURGERY</option>
+                    <option value="PLASTIC SURGERY">PLASTIC SURGERY</option>
+                    <option value="OMFS">OMFS</option>
+                    <option value="VASCULAR SURGERY">VASCULAR SURGERY</option>
+                    <option value="CTVS">CTVS</option>
+                  </optgroup>
+                  <optgroup label="Medical Specialties">
+                    <option value="GENERAL MEDICINE">GENERAL MEDICINE</option>
+                    <option value="MEDICAL ONCOLOGY">MEDICAL ONCOLOGY</option>
+                    <option value="NEUROLOGY">NEUROLOGY</option>
+                    <option value="MEDICAL GASTROENTEROLOGY">MEDICAL GASTROENTEROLOGY</option>
+                    <option value="ENDOCRINOLOGY">ENDOCRINOLOGY</option>
+                    <option value="DERMATOLOGY">DERMATOLOGY</option>
+                    <option value="PSYCHIATRY">PSYCHIATRY</option>
+                    <option value="PAC / ANESTHESIA">PAC / ANESTHESIA</option>
+                  </optgroup>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <input type="text" id="opinionReason" placeholder="Reason for call (e.g. Glycemic Control)" class="w-full text-xs border border-purple-300 rounded-lg p-1.5 bg-white focus:outline-none" />
+              </div>
+            </div>
+
+            <!-- Gemini AI Scanner -->
+            <div class="p-2 bg-purple-50/50 border border-dashed border-purple-300 rounded-lg space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold text-purple-900 flex items-center gap-1">
+                  <i class="fa-solid fa-camera text-purple-600"></i> Scan Call Sheet via Gemini AI
+                </span>
+                <span id="tempOpinionPhotoName" class="text-[10px] text-purple-700 italic">No image attached</span>
+              </div>
+              
+              <input type="file" id="opinionPhotoInput" accept="image/*" capture="environment" class="hidden" onchange="handleOpinionPhotoSelected(event)">
+
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" onclick="document.getElementById('opinionPhotoInput').click()" class="bg-white hover:bg-slate-50 text-purple-800 border border-purple-300 py-1.5 px-2 rounded-lg text-xs font-semibold shadow-sm cursor-pointer flex items-center justify-center gap-1">
+                  <i class="fa-solid fa-camera"></i> 1. Snap Sheet
+                </button>
+                <button type="button" id="ocrOpinionBtn" onclick="runGeminiAIOCR()" class="bg-purple-700 hover:bg-purple-800 text-white py-1.5 px-2 rounded-lg text-xs font-semibold shadow-sm cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50" disabled>
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 2. AI Read
+                </button>
+              </div>
+
+              <div id="opinionOcrProgress" style="display: none;" class="text-[10px] text-purple-800 font-semibold flex items-center gap-1">
+                <i class="fa-solid fa-spinner fa-spin text-purple-600"></i> Transcribing via Gemini...
+              </div>
+              <div id="opinionPhotoThumb" style="display: none;" class="mt-1"></div>
+            </div>
+
+            <textarea id="opinionAdvice" rows="2" placeholder="Advice typed or extracted via Gemini AI..." class="w-full text-xs border border-purple-300 rounded-lg p-2 focus:outline-none font-mono"></textarea>
+            <div class="flex justify-end">
+              <button type="button" onclick="addOpinionToTempList()" class="bg-purple-700 hover:bg-purple-800 text-white font-semibold py-1 px-3 rounded-lg text-xs cursor-pointer">+ Add Opinion</button>
+            </div>
+          </div>
+          <div id="opinionListContainer" class="space-y-2 pt-1 empty:hidden"></div>
+        </div>
+
+        <!-- Vitals & Complaints -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Vitals (BP, PR)</label>
+            <textarea id="vitals" rows="2" placeholder="BP: 130/90 mmHg&#10;PR: 82 bpm" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Complaints</label>
+            <textarea id="complaints" rows="2" placeholder="C/o pain at site..." class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Local Examination (L/E)</label>
+          <textarea id="exam" rows="2" placeholder="Dressings intact, no soakage..." class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:outline-none"></textarea>
+        </div>
+
+        <!-- ANTIBIOTICS & MEDICATIONS -->
+        <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-200 space-y-2.5">
+          <div class="flex items-center justify-between border-b border-indigo-200/60 pb-1">
+            <label class="font-bold text-indigo-950 flex items-center gap-1.5">
+              <i class="fa-solid fa-pills text-indigo-600"></i> Active Antibiotics & Medications
+            </label>
+          </div>
+          
+          <div>
+            <div class="flex items-center justify-between mb-0.5">
+              <label class="block text-[10px] font-semibold text-slate-600">Diet Plan</label>
+              <div class="flex gap-1">
+                <button type="button" onclick="document.getElementById('diet').value='NPO'" class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded text-[9px] cursor-pointer">NPO</button>
+                <button type="button" onclick="document.getElementById('diet').value='Clear Liquids'" class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded text-[9px] cursor-pointer">Clear Liq</button>
+                <button type="button" onclick="document.getElementById('diet').value='Normal Diet'" class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded text-[9px] cursor-pointer">Normal</button>
+                <button type="button" onclick="document.getElementById('diet').value='Diabetic Diet'" class="px-1.5 py-0.5 bg-indigo-100 text-indigo-800 rounded text-[9px] cursor-pointer">Diabetic</button>
+              </div>
+            </div>
+            <input type="text" id="diet" placeholder="Diabetic / Salt Restricted / NPO" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none" />
+          </div>
+          
+          <div class="bg-white p-2.5 rounded-lg border border-indigo-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+              <div class="sm:col-span-7">
+                <input type="text" id="newDrugName" placeholder="e.g. Inj Linezolid 600mg IV 1-0-1" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 focus:bg-white focus:outline-none font-medium" />
+              </div>
+              <div class="sm:col-span-3">
+                <input type="date" id="newDrugStartDate" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-slate-50 focus:bg-white focus:outline-none" />
+              </div>
+              <div class="sm:col-span-2">
+                <button type="button" onclick="addDrugToTempList()" class="w-full h-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg p-2 flex items-center justify-center gap-1 cursor-pointer shadow-sm">+ Add</button>
+              </div>
+            </div>
+          </div>
+          <div id="drugListContainer" class="space-y-1.5 pt-1 empty:hidden"></div>
+        </div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-semibold py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer">
+            <i class="fa-solid fa-check"></i> Save Inpatient Record
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- QUICK SCAN / RADIOLOGY MODAL (MULTIPLE PHOTOS) -->
+  <div id="quickScanModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-indigo-50 border-b border-indigo-100">
+        <h3 class="text-sm font-bold text-indigo-900"><i class="fa-solid fa-file-waveform text-indigo-600 mr-1"></i> Quick Add Scans & Investigations</h3>
+        <button type="button" onclick="closeQuickScanModal()" class="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="quickScanPatientId">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1">Study Type</label>
+            <select id="quickScanType" class="w-full border border-slate-300 rounded p-2 bg-slate-50">
+              <option value="CT Scan">CT Scan</option>
+              <option value="MRI">MRI</option>
+              <option value="X-Ray">X-Ray</option>
+              <option value="USG Abdomen">USG Abdomen</option>
+              <option value="Blood Labs">Blood Labs / CBC</option>
+              <option value="Culture Swab">Culture Swab</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Findings / Impression</label>
+            <input type="text" id="quickScanDesc" class="w-full border border-slate-300 rounded p-2" placeholder="e.g. Acute calculous cholecystitis">
+          </div>
+        </div>
+        <input type="file" id="quickScanInput" accept="image/*" capture="environment" multiple class="hidden" onchange="handleQuickScanFilesSelected(event)">
+        <div class="flex items-center gap-2 pt-1">
+          <button type="button" onclick="document.getElementById('quickScanInput').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 rounded shadow-sm font-semibold border border-indigo-200 cursor-pointer"><i class="fa-solid fa-camera mr-1"></i> Snap Multiple</button>
+          <span id="quickScanFileName" class="text-[11px] text-slate-500 truncate flex-1 font-mono">No files selected</span>
+        </div>
+        <button type="button" onclick="saveQuickScans()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-sm mt-2 cursor-pointer"><i class="fa-solid fa-check mr-1"></i> Save Scans to Clinical File</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK OPINION MODAL WITH GEMINI OCR -->
+  <div id="quickOpinionModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-purple-50 border-b border-purple-100">
+        <h3 class="text-sm font-bold text-purple-900"><i class="fa-solid fa-user-doctor text-purple-600 mr-1"></i> Quick Add Cross-Consultation</h3>
+        <button type="button" onclick="closeQuickOpinionModal()" class="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="quickOpinionPatientId">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1">Department</label>
+            <select id="quickOpDept" class="w-full border border-slate-300 rounded p-2 bg-slate-50">
+              <optgroup label="Surgical">
+                <option value="ENT">ENT</option>
+                <option value="OPHTHALMOLOGY">OPHTHALMOLOGY</option>
+                <option value="OBG">OBG</option>
+                <option value="SURGICAL ONCOLOGY">SURGICAL ONCOLOGY</option>
+                <option value="UROLOGY">UROLOGY</option>
+                <option value="NEURO SURGERY">NEURO SURGERY</option>
+                <option value="PLASTIC SURGERY">PLASTIC SURGERY</option>
+                <option value="OMFS">OMFS</option>
+                <option value="VASCULAR SURGERY">VASCULAR SURGERY</option>
+                <option value="CTVS">CTVS</option>
+              </optgroup>
+              <optgroup label="Medical">
+                <option value="GENERAL MEDICINE">GENERAL MEDICINE</option>
+                <option value="MEDICAL ONCOLOGY">MEDICAL ONCOLOGY</option>
+                <option value="NEUROLOGY">NEUROLOGY</option>
+                <option value="MEDICAL GASTROENTEROLOGY">MEDICAL GASTROENTEROLOGY</option>
+                <option value="ENDOCRINOLOGY">ENDOCRINOLOGY</option>
+                <option value="DERMATOLOGY">DERMATOLOGY</option>
+                <option value="PSYCHIATRY">PSYCHIATRY</option>
+                <option value="PAC / ANESTHESIA">PAC / ANESTHESIA</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Reason</label>
+            <input type="text" id="quickOpReason" class="w-full border border-slate-300 rounded p-2" placeholder="e.g. Pre-Op Fitness">
+          </div>
+        </div>
+
+        <input type="file" id="quickOpInput" accept="image/*" capture="environment" class="hidden" onchange="handleQuickOpinionSelected(event)">
+        <div class="flex items-center gap-2 pt-1">
+          <button type="button" onclick="document.getElementById('quickOpInput').click()" class="bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-2 rounded shadow-sm font-semibold border border-purple-200 cursor-pointer"><i class="fa-solid fa-camera mr-1"></i> Snap Sheet</button>
+          <button type="button" id="quickOpOcrBtn" onclick="runQuickGeminiAIOCR()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded shadow-sm font-semibold disabled:opacity-50 cursor-pointer" disabled><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Gemini Read</button>
+        </div>
+        <div id="quickOpOcrProgress" style="display: none;" class="text-[10px] text-purple-600 font-bold"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Transcribing...</div>
+        
+        <div>
+          <label class="block font-semibold mb-1">Advice & Notes</label>
+          <textarea id="quickOpAdvice" rows="3" class="w-full border border-slate-300 rounded p-2 font-mono" placeholder="Type or extract..."></textarea>
+        </div>
+        <button type="button" onclick="saveQuickOpinion()" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-lg shadow-sm mt-2 cursor-pointer"><i class="fa-solid fa-check mr-1"></i> Save Opinion</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK INPUT / OUTPUT (I/O) MODAL -->
+  <div id="quickIOModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-emerald-600 text-white">
+        <h3 class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid fa-scale-balanced"></i> Quick Update 24h I/O
+        </h3>
+        <button type="button" onclick="closeQuickIOModal()" class="text-white hover:text-emerald-100 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="quickIOPatientId">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Total Intake (IV + Oral ml):</label>
+          <input type="text" id="quickInputVol" placeholder="e.g. 2500 ml" class="w-full border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Total Output (Urine + DT + RT ml):</label>
+          <input type="text" id="quickOutputVol" placeholder="e.g. 1900 ml" class="w-full border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Net Fluid Balance:</label>
+          <input type="text" id="quickNetBalance" placeholder="e.g. +600 ml" class="w-full border border-slate-300 rounded-lg p-2.5 font-mono font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+        </div>
+        <button type="button" onclick="saveQuickIO()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg shadow-sm cursor-pointer transition">
+          <i class="fa-solid fa-check mr-1"></i> Update I/O Chart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK DIET MODAL -->
+  <div id="quickDietModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-sky-600 text-white">
+        <h3 class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid fa-utensils"></i> Update Diet Order
+        </h3>
+        <button type="button" onclick="closeQuickDietModal()" class="text-white hover:text-sky-100 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="quickDietPatientId">
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="setQuickDietPreset('NPO')" class="px-2 py-1 bg-rose-50 border border-rose-200 text-rose-800 rounded font-medium hover:bg-rose-100">NPO</button>
+          <button type="button" onclick="setQuickDietPreset('Clear Liquids')" class="px-2 py-1 bg-sky-50 border border-sky-200 text-sky-800 rounded font-medium hover:bg-sky-100">Clear Liquids</button>
+          <button type="button" onclick="setQuickDietPreset('Soft Diet')" class="px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800 rounded font-medium hover:bg-amber-100">Soft Diet</button>
+          <button type="button" onclick="setQuickDietPreset('Normal Diet')" class="px-2 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded font-medium hover:bg-emerald-100">Normal Diet</button>
+          <button type="button" onclick="setQuickDietPreset('Diabetic Diet')" class="px-2 py-1 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded font-medium hover:bg-indigo-100">Diabetic Diet</button>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Active Diet Plan:</label>
+          <input type="text" id="quickDietText" placeholder="e.g. Diabetic Diet" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-sky-500 focus:outline-none font-medium" />
+        </div>
+        <button type="button" onclick="saveQuickDiet()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-lg shadow-sm cursor-pointer transition">
+          <i class="fa-solid fa-check mr-1"></i> Save Diet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK MEDS MODAL -->
+  <div id="quickMedsModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-pink-600 text-white">
+        <h3 class="text-sm font-bold flex items-center gap-2">
+          <i class="fa-solid fa-pills"></i> Edit Medications
+        </h3>
+        <button type="button" onclick="closeQuickMedsModal()" class="text-white hover:text-pink-100 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-4 text-xs">
+        <input type="hidden" id="quickMedsPatientId">
+        
+        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+          <label class="font-bold text-slate-700 block border-b border-slate-200 pb-1">Add New Medication</label>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <div class="sm:col-span-7">
+              <input type="text" id="quickNewDrugName" placeholder="e.g. Inj Meropenem 1g IV" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none" />
+            </div>
+            <div class="sm:col-span-3">
+              <input type="date" id="quickNewDrugStartDate" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white focus:outline-none" />
+            </div>
+            <div class="sm:col-span-2">
+              <button type="button" onclick="addQuickDrug()" class="w-full h-full bg-pink-600 hover:bg-pink-700 text-white font-semibold rounded-lg p-2 flex items-center justify-center gap-1 cursor-pointer shadow-sm">+ Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1.5">Current Medications List</label>
+          <div id="quickMedsListContainer" class="space-y-1.5 empty:hidden max-h-48 overflow-y-auto pr-1"></div>
+        </div>
+
+        <button type="button" onclick="saveQuickMeds()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg shadow-sm cursor-pointer transition mt-2">
+          <i class="fa-solid fa-check mr-1"></i> Update Patient Meds
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX MODAL -->
+  <div id="imageModal" class="modal p-4">
+    <div class="relative max-w-3xl w-full bg-slate-950 rounded-2xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between p-3 border-b border-slate-800 text-white">
+        <span id="modalCaption" class="text-xs font-medium truncate">Medical Document</span>
+        <button type="button" onclick="closeImageModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="flex-1 overflow-auto flex items-center justify-center p-2 bg-black">
+        <img id="modalImg" src="" alt="Document preview" class="max-h-[75vh] w-auto object-contain rounded">
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK COMPLAINT MODAL -->
+  <div id="quickComplaintModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 class="text-sm font-bold flex items-center gap-2">Quick Update Complaints</h3>
+        <button type="button" onclick="closeQuickComplaintModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="quickComplaintPatientId">
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="addQuickComplaintPreset('C/o severe pain at surgical site')" class="px-2 py-1 bg-rose-50 border border-rose-200 text-rose-800 rounded font-medium hover:bg-rose-100">+ Site Pain</button>
+          <button type="button" onclick="addQuickComplaintPreset('C/o fever spikes with chills')" class="px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800 rounded font-medium hover:bg-amber-100">+ Fever</button>
+          <button type="button" onclick="addQuickComplaintPreset('Nil fresh complaints. Comfortable.')" class="px-2 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded font-medium hover:bg-emerald-100">✓ Nil</button>
+        </div>
+        <textarea id="quickComplaintText" rows="4" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium"></textarea>
+        <button type="button" onclick="saveQuickComplaint()" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg shadow-sm cursor-pointer">Update Complaints</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK TODO MODAL -->
+  <div id="quickTodoModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 class="text-sm font-bold flex items-center gap-2">Update Daily To-Do Tasks</h3>
+        <button type="button" onclick="closeQuickTodoModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <input type="hidden" id="quickTodoPatientId">
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="addQuickTodoPreset('Send morning CBC & Electrolytes')" class="px-2 py-1 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded font-medium hover:bg-indigo-100">+ Labs</button>
+          <button type="button" onclick="addQuickTodoPreset('Dressing change with betadine')" class="px-2 py-1 bg-blue-50 border border-blue-200 text-blue-800 rounded font-medium hover:bg-blue-100">+ Dressing</button>
+          <button type="button" onclick="addQuickTodoPreset('Review Drain output at 2 PM')" class="px-2 py-1 bg-teal-50 border border-teal-200 text-teal-800 rounded font-medium hover:bg-teal-100">+ Review Drain</button>
+        </div>
+        <textarea id="quickTodoText" rows="4" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-medium"></textarea>
+        <button type="button" onclick="saveQuickTodo()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow-sm cursor-pointer">Update To-Do</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY CENSUS MODAL -->
+  <div id="monthlyStatsModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-6xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 class="text-sm font-bold">Monthly Census Register</h3>
+        <button type="button" onclick="closeMonthlyStatsModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
+        <table class="w-full text-left text-[11px] divide-y divide-slate-200">
+          <thead class="bg-slate-50 font-semibold text-slate-700">
+            <tr>
+              <th class="p-2.5">DOA</th>
+              <th class="p-2.5">MRD / IP</th>
+              <th class="p-2.5">Patient Name</th>
+              <th class="p-2.5">Ward</th>
+              <th class="p-2.5">Diagnosis</th>
+              <th class="p-2.5">Status</th>
+            </tr>
+          </thead>
+          <tbody id="statMonthlyTableBody" class="divide-y divide-slate-100 bg-white"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK IMPORT MODALS -->
+  <div id="bulkVitalsModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 class="text-sm font-bold"><i class="fa-solid fa-heart-pulse text-rose-500 mr-1"></i> Bulk Vitals Parser</h3>
+        <button type="button" onclick="closeBulkVitalsModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <textarea id="rawVitalsInput" rows="8" placeholder="Paste ward vitals..." class="w-full font-mono text-xs border border-slate-300 rounded-lg p-3 focus:outline-none"></textarea>
+        <button type="button" onclick="processBulkVitalsBatch()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-lg shadow cursor-pointer">Auto-Match & Update</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bulkCBGModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 class="text-sm font-bold"><i class="fa-solid fa-droplet text-blue-500 mr-1"></i> Bulk CBG Parser</h3>
+        <button type="button" onclick="closeBulkCBGModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <textarea id="rawCBGInput" rows="8" placeholder="Paste CBG list..." class="w-full font-mono text-xs border border-slate-300 rounded-lg p-3 focus:outline-none"></textarea>
+        <button type="button" onclick="processBulkCBGBatch()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-lg shadow cursor-pointer">Auto-Match & Update</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bulkDrainsModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 class="text-sm font-bold"><i class="fa-solid fa-faucet-drip text-teal-500 mr-1"></i> Bulk Drains Parser</h3>
+        <button type="button" onclick="closeBulkDrainsModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs">
+        <textarea id="rawDrainsInput" rows="8" placeholder="Paste drains list..." class="w-full font-mono text-xs border border-slate-300 rounded-lg p-3 focus:outline-none"></textarea>
+        <button type="button" onclick="processBulkDrainsBatch()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-lg shadow cursor-pointer">Auto-Match & Update</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT ENGINE -->
+  <script>
+    // GLOBALS FOR GEMINI API
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXcR9IuXFcOOOSWnL8P1k_IBPRJCNPhtk",
+      authDomain: "surgix-ward.firebaseapp.com",
+      databaseURL: "https://surgix-ward-default-rtdb.firebaseio.com",
+      projectId: "surgix-ward",
+      storageBucket: "surgix-ward.firebasestorage.app",
+      messagingSenderId: "826888647057",
+      appId: "1:826888647057:web:2755ebf9e8ee16b0bdea30"
+    };
+
+    let db = null;
+    let isFirebaseReady = false;
+    let patients = [];
+
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        isFirebaseReady = true;
+      }
+    } catch (err) {
+      console.warn("Firebase fallback mode active:", err);
+    }
+
+    const WARD_CONFIG = [
+      { key: "ALL", label: "All Wards" },
+      { key: "MSW", label: "MSW", color: "bg-teal-50 text-teal-800 border-teal-200" },
+      { key: "FSW", label: "FSW", color: "bg-purple-50 text-purple-800 border-purple-200" },
+      { key: "Corporate", label: "Corporate", color: "bg-amber-50 text-amber-800 border-amber-200" },
+      { key: "SICU", label: "SICU", color: "bg-rose-50 text-rose-800 border-rose-200" },
+      { key: "GICU", label: "GICU", color: "bg-red-50 text-red-800 border-red-200" },
+      { key: "IA", label: "IA", color: "bg-orange-50 text-orange-800 border-orange-200" },
+      { key: "ORTHO", label: "ORTHO", color: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+      { key: "OBG", label: "OBG", color: "bg-pink-50 text-pink-800 border-pink-200" },
+      { key: "NSGY", label: "Neurosurgery", color: "bg-indigo-50 text-indigo-800 border-indigo-200" },
+      { key: "SURG_ONCO", label: "Surg Onco", color: "bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200" },
+      { key: "ENT", label: "ENT", color: "bg-lime-50 text-lime-800 border-lime-200" },
+      { key: "OPHTHAL", label: "Ophthal", color: "bg-cyan-50 text-cyan-800 border-cyan-200" },
+      { key: "UROLOGY", label: "Urology", color: "bg-violet-50 text-violet-800 border-violet-200" },
+      { key: "PLAST", label: "Plastic", color: "bg-rose-50 text-rose-800 border-rose-200" },
+      { key: "GM", label: "GM", color: "bg-sky-50 text-sky-800 border-sky-200" },
+      { key: "MED_ONCO", label: "Med Onco", color: "bg-purple-50 text-purple-800 border-purple-200" },
+      { key: "DERMAT", label: "Dermat", color: "bg-amber-50 text-amber-800 border-amber-200" },
+      { key: "Paediatric", label: "Paediatric", color: "bg-yellow-50 text-yellow-800 border-yellow-200" }
+    ];
+
+    let currentMainTab = 'patients';
+    let currentSelectedWardFilter = 'ALL';
+
+    function getLocalDateISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function formatDateDMY(isoDateStr) {
+      if (!isoDateStr) return '-';
+      const parts = isoDateStr.split('-');
+      if (parts.length !== 3) return isoDateStr;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function parseLocalDate(dateStr) {
+      if (!dateStr) return null;
+      const parts = dateStr.split('-').map(Number);
+      if (parts.length !== 3) return null;
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function calculateDaysDiff(pastDateStr) {
+      if (!pastDateStr) return null;
+      const start = parseLocalDate(pastDateStr);
+      if (!start) return null;
+      const today = parseLocalDate(getLocalDateISO());
+      return Math.floor((today.getTime() - start.getTime()) / 86400000);
+    }
+
+    let currentProcedures = [];
+    let currentScans = [];
+    let currentDrugs = [];
+    let currentOpinions = [];
+    let tempScanFilesData = [];
+    let quickScanFilesObj = [];
+    let tempOpinionPhoto = null;
+    let quickOpinionPhotoObj = null;
+
+    const todayISO = getLocalDateISO();
+    const currentMonthStr = todayISO.substring(0, 7);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (document.getElementById('selectedMonth')) document.getElementById('selectedMonth').value = currentMonthStr;
+
+      try {
+        const local = JSON.parse(localStorage.getItem('ward_master_registry_v20') || '[]');
+        if (Array.isArray(local) && local.length > 0) {
+          patients = local;
+          updateUI();
+        }
+      } catch (e) {}
+
+      if (isFirebaseReady) {
+        db.ref('ward_census_data').on('value', (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            patients = Array.isArray(val) ? val : Object.values(val);
+          } else if (patients.length === 0) {
+            patients = [];
+          }
+          localStorage.setItem('ward_master_registry_v20', JSON.stringify(patients));
+          updateUI();
+          document.getElementById('syncBadge').className = 'bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200 flex items-center gap-1';
+          document.getElementById('syncBadge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE SYNC';
+        }, (error) => {
+          console.error("Firebase read error:", error);
+          document.getElementById('syncBadge').className = 'bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-200';
+          document.getElementById('syncBadge').innerText = 'LOCAL MODE';
+        });
+      } else {
+        document.getElementById('syncBadge').innerText = 'LOCAL STORAGE';
+        updateUI();
+      }
+    });
+
+    function saveToStorage() {
+      localStorage.setItem('ward_master_registry_v20', JSON.stringify(patients));
+      if (isFirebaseReady) {
+        db.ref('ward_census_data').set(patients).catch(err => console.error("Firebase write error:", err));
+      }
+    }
+
+    function switchMainTab(tab) {
+      currentMainTab = tab;
+      ['patients', 'handover', 'todo'].forEach(t => {
+        const btn = document.getElementById(`tabBtn-${t}`);
+        const content = document.getElementById(`tabContent-${t}`);
+        if (t === tab) {
+          btn.className = 'py-2.5 px-3.5 border-b-2 border-teal-600 text-teal-700 flex items-center gap-1.5 cursor-pointer font-bold whitespace-nowrap';
+          content.classList.remove('hidden');
+        } else {
+          btn.className = 'py-2.5 px-3.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 cursor-pointer font-semibold whitespace-nowrap';
+          content.classList.add('hidden');
+        }
+      });
+      if (tab === 'handover' || tab === 'todo') renderOutputs();
+    }
+
+    function selectWardFilter(wardKey) {
+      currentSelectedWardFilter = wardKey;
+      renderWardSubTabs();
+      renderPatientList();
+    }
+
+    function renderWardSubTabs() {
+      const container = document.getElementById('wardSubTabsContainer');
+      if (!container) return;
+
+      const activePatients = patients.filter(p => p.category !== 'Discharges' && p.category !== 'Transfer out');
+
+      container.innerHTML = WARD_CONFIG.map(w => {
+        const count = w.key === 'ALL' 
+          ? activePatients.length 
+          : activePatients.filter(p => p.category === w.key).length;
+        
+        if (w.key !== 'ALL' && count === 0) return '';
+        const isSelected = (currentSelectedWardFilter === w.key);
+        return `
+          <button type="button" onclick="selectWardFilter('${w.key}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer flex items-center gap-1 ${isSelected ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
+            <span>${w.label}</span>
+            <span class="text-[10px] opacity-80 font-mono">(${count})</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function compressImage(src, maxWidth, quality, callback) {
+      const img = new Image();
+      img.onload = () => {
+        const elem = document.createElement('canvas');
+        let width = img.width, height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        elem.width = width; elem.height = height;
+        const ctx = elem.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(elem.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => { alert("Failed to process scan image."); };
+      img.src = src; 
+    }
+
+    function openImageModal(img, cap) {
+      document.getElementById('modalImg').src = img;
+      document.getElementById('modalCaption').innerText = cap;
+      document.getElementById('imageModal').classList.add('active');
+    }
+    function closeImageModal() { document.getElementById('imageModal').classList.remove('active'); }
+
+    // Multi-Scan Handler in Main Modal
+    function handleScanFilesSelected(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+      tempScanFilesData = [];
+      let processed = 0;
+      
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          compressImage(e.target.result, 800, 0.5, (compressed) => {
+            tempScanFilesData.push({ name: file.name, data: compressed });
+            processed++;
+            if(processed === files.length) {
+              document.getElementById('tempScanFileName').innerText = `${files.length} scan(s) attached`;
+            }
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function addScansToTempList() {
+      const type = document.getElementById('scanReportType').value;
+      const desc = document.getElementById('scanDescription').value.trim();
+      if (tempScanFilesData.length === 0) { alert("Please snap or choose scan images first."); return; }
+      
+      tempScanFilesData.forEach(item => {
+        currentScans.push({
+          id: Date.now() + Math.random(), type, description: desc || 'Report', fileName: item.name, data: item.data, uploadedDate: todayISO
+        });
+      });
+      tempScanFilesData = [];
+      document.getElementById('tempScanFileName').innerText = 'No scan selected';
+      document.getElementById('scanDescription').value = '';
+      document.getElementById('scanFileInput').value = '';
+      renderStagedScansList();
+    }
+
+    function renderStagedScansList() {
+      const container = document.getElementById('stagedScansContainer');
+      container.innerHTML = currentScans.map((s) => `
+        <div class="flex items-center justify-between p-2 bg-white border border-indigo-200 rounded-lg shadow-sm">
+          <div class="flex items-center gap-2 overflow-hidden">
+            <img src="${s.data}" onclick="openImageModal('${s.data}', '${s.type}')" class="w-10 h-10 rounded object-cover border border-indigo-200 cursor-pointer flex-shrink-0" />
+            <div class="truncate">
+              <span class="font-bold text-indigo-900 block truncate">${s.type}</span>
+              <span class="text-[10px] text-slate-500 truncate block">${s.description}</span>
+            </div>
+          </div>
+          <button type="button" onclick="currentScans = currentScans.filter(x => x.id !== ${s.id}); renderStagedScansList();" class="text-rose-500 hover:text-rose-700 p-1.5 cursor-pointer">
+            <i class="fa-solid fa-trash-can text-sm"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function deletePatientScanDirectly(patientId, scanId) {
+      if (confirm("Delete this scan report?")) {
+        const patient = patients.find(p => p.id === patientId);
+        if (patient && patient.scans) {
+          patient.scans = patient.scans.filter(s => s.id !== scanId);
+          saveToStorage();
+          updateUI();
+        }
+      }
+    }
+
+    // Quick Scan Modal Logic
+    function openQuickScanModal(id) {
+      document.getElementById('quickScanPatientId').value = id;
+      quickScanFilesObj = [];
+      document.getElementById('quickScanDesc').value = '';
+      document.getElementById('quickScanFileName').innerText = 'No files selected';
+      document.getElementById('quickScanInput').value = '';
+      document.getElementById('quickScanModal').classList.add('active');
+    }
+    
+    function closeQuickScanModal() { document.getElementById('quickScanModal').classList.remove('active'); }
+
+    function handleQuickScanFilesSelected(e) {
+      const files = e.target.files;
+      if(!files || files.length === 0) return;
+      quickScanFilesObj = [];
+      let processed = 0;
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          compressImage(ev.target.result, 800, 0.5, (comp) => {
+            quickScanFilesObj.push({ name: file.name, data: comp });
+            processed++;
+            if(processed === files.length) {
+              document.getElementById('quickScanFileName').innerText = `${files.length} file(s) ready`;
+            }
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function saveQuickScans() {
+      const id = parseInt(document.getElementById('quickScanPatientId').value);
+      const type = document.getElementById('quickScanType').value;
+      const desc = document.getElementById('quickScanDesc').value.trim();
+      const p = patients.find(x => x.id === id);
+      if(p && quickScanFilesObj.length > 0) {
+        if(!p.scans) p.scans = [];
+        quickScanFilesObj.forEach(item => {
+          p.scans.push({
+            id: Date.now() + Math.random(), type, description: desc || 'Report',
+            fileName: item.name, data: item.data, uploadedDate: todayISO
+          });
+        });
+        saveToStorage();
+        updateUI();
+        closeQuickScanModal();
+      } else {
+        alert("Please select at least one scan image.");
+      }
+    }
+
+    // ==== GEMINI OCR / CAMERA FUNCTIONS FOR OPINIONS ====
+    function handleOpinionPhotoSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        compressImage(e.target.result, 800, 0.5, (compressed) => {
+          tempOpinionPhoto = { name: file.name, data: compressed };
+          document.getElementById('tempOpinionPhotoName').innerText = file.name;
+          document.getElementById('ocrOpinionBtn').disabled = false;
+          const thumb = document.getElementById('opinionPhotoThumb');
+          thumb.innerHTML = `
+            <div class="relative w-16 h-16 rounded border border-purple-300 overflow-hidden shadow-sm">
+              <img src="${compressed}" class="w-full h-full object-cover" />
+              <button type="button" onclick="clearTempOpinionPhoto()" class="absolute top-0 right-0 bg-rose-600 text-white w-4 h-4 flex items-center justify-center text-[10px]">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          `;
+          thumb.style.display = 'block';
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearTempOpinionPhoto() {
+      tempOpinionPhoto = null;
+      document.getElementById('tempOpinionPhotoName').innerText = 'No image attached';
+      document.getElementById('ocrOpinionBtn').disabled = true;
+      document.getElementById('opinionPhotoThumb').style.display = 'none';
+      document.getElementById('opinionPhotoThumb').innerHTML = '';
+      document.getElementById('opinionPhotoInput').value = '';
+    }
+
+    function handleQuickOpinionSelected(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        compressImage(ev.target.result, 800, 0.5, (comp) => {
+          quickOpinionPhotoObj = { name: file.name, data: comp };
+          document.getElementById('quickOpOcrBtn').disabled = false;
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function callGeminiAI(base64Image) {
+      const cleanBase64 = base64Image.split(',')[1] || base64Image;
+      const payload = {
+        contents: [{
+            parts: [
+              { text: "Accurately transcribe the handwritten clinical notes, prescriptions, or opinion advice in this image. Output only clean medical text and orders without conversational preamble." },
+              { inline_data: { mime_type: "image/jpeg", data: cleanBase64 } }
+            ]
+        }]
+      };
+      
+      const API_URL = GEMINI_API_KEY.includes("YOUR_GEMINI_API_KEY") 
+        ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${typeof API_KEY !== 'undefined' ? API_KEY : ''}` 
+        : `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if(data.candidates && data.candidates[0].content.parts[0].text) {
+        return data.candidates[0].content.parts[0].text.trim();
+      }
+      throw new Error("Gemini OCR parsing failed. Ensure API key is correct.");
+    }
+
+    async function runGeminiAIOCR() {
+      if (!tempOpinionPhoto) return;
+      const progress = document.getElementById('opinionOcrProgress');
+      const btn = document.getElementById('ocrOpinionBtn');
+      progress.style.display = 'flex';
+      btn.disabled = true;
+      try {
+        const textResult = await callGeminiAI(tempOpinionPhoto.data);
+        const adviceBox = document.getElementById('opinionAdvice');
+        adviceBox.value = adviceBox.value ? `${adviceBox.value}\n\n${textResult}` : textResult;
+        progress.style.display = 'none';
+        btn.disabled = false;
+      } catch (err) {
+        console.error(err);
+        progress.innerText = "OCR error. Ensure lighting is adequate and API key is set.";
+        btn.disabled = false;
+      }
+    }
+
+    async function runQuickGeminiAIOCR() {
+      if(!quickOpinionPhotoObj) return;
+      const prog = document.getElementById('quickOpOcrProgress');
+      const btn = document.getElementById('quickOpOcrBtn');
+      prog.style.display = 'block'; 
+      btn.disabled = true;
+      try {
+        const textResult = await callGeminiAI(quickOpinionPhotoObj.data);
+        const adv = document.getElementById('quickOpAdvice');
+        adv.value = adv.value ? adv.value + '\n\n' + textResult : textResult;
+      } catch(e) { console.error(e); }
+      prog.style.display = 'none'; 
+      btn.disabled = false;
+    }
+
+    function addOpinionToTempList() {
+      const dept = document.getElementById('opinionDept').value;
+      const reason = document.getElementById('opinionReason').value.trim();
+      const advice = document.getElementById('opinionAdvice').value.trim();
+      
+      if (!advice && !tempOpinionPhoto) { alert("Enter advice or attach call sheet."); return; }
+      
+      currentOpinions.push({ 
+        dept, 
+        reason: reason || 'Consultation', 
+        advice: advice || 'As per attached sheet', 
+        photo: tempOpinionPhoto ? { ...tempOpinionPhoto } : null 
+      });
+      
+      document.getElementById('opinionReason').value = '';
+      document.getElementById('opinionAdvice').value = '';
+      clearTempOpinionPhoto();
+      renderTempOpinionList();
+    }
+
+    function removeOpinionFromTempList(idx) {
+      currentOpinions.splice(idx, 1);
+      renderTempOpinionList();
+    }
+
+    function renderTempOpinionList() {
+      const container = document.getElementById('opinionListContainer');
+      container.innerHTML = currentOpinions.map((op, idx) => {
+        const photoBadge = op.photo ? `
+          <div class="mt-1 pt-1 border-t border-purple-100 flex items-center gap-1.5">
+            <span class="text-[10px] font-semibold text-purple-700"><i class="fa-solid fa-paperclip"></i> Sheet Attached:</span>
+            <img src="${op.photo.data}" onclick="openImageModal('${op.photo.data}', '${op.dept} Opinion Sheet')" class="w-6 h-6 rounded object-cover border border-purple-300 cursor-pointer" />
+          </div>
+        ` : '';
+        return `
+          <div class="bg-white border border-purple-200 rounded-lg p-2 text-xs">
+            <div class="flex items-center justify-between border-b border-purple-100 pb-1 mb-1 font-bold text-purple-900">
+              <span>${op.dept} (${op.reason})</span>
+              <button type="button" onclick="removeOpinionFromTempList(${idx})" class="text-rose-500 hover:text-rose-700 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+            <div class="text-slate-700 font-mono text-[11px] whitespace-pre-line">${op.advice}</div>
+            ${photoBadge}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openQuickOpinionModal(id) {
+      document.getElementById('quickOpinionPatientId').value = id;
+      quickOpinionPhotoObj = null;
+      document.getElementById('quickOpReason').value = '';
+      document.getElementById('quickOpAdvice').value = '';
+      document.getElementById('quickOpOcrBtn').disabled = true;
+      document.getElementById('quickOpInput').value = '';
+      document.getElementById('quickOpinionModal').classList.add('active');
+    }
+    
+    function closeQuickOpinionModal() { document.getElementById('quickOpinionModal').classList.remove('active'); }
+
+    function saveQuickOpinion() {
+      const id = parseInt(document.getElementById('quickOpinionPatientId').value);
+      const dept = document.getElementById('quickOpDept').value;
+      const reason = document.getElementById('quickOpReason').value.trim();
+      const advice = document.getElementById('quickOpAdvice').value.trim();
+      const p = patients.find(x => x.id === id);
+      
+      if(p) {
+        if(!p.opinions) p.opinions = [];
+        p.opinions.push({
+          dept, 
+          reason: reason || 'Consultation', 
+          advice: advice || (quickOpinionPhotoObj ? 'See attached sheet' : ''),
+          photo: quickOpinionPhotoObj ? { ...quickOpinionPhotoObj } : null
+        });
+        saveToStorage();
+        updateUI();
+        closeQuickOpinionModal();
+      }
+    }
+
+
+    // ==== QUICK DIET LOGIC ====
+    function openQuickDietModal(id) {
+      const p = patients.find(x => x.id === id);
+      if(!p) return;
+      document.getElementById('quickDietPatientId').value = p.id;
+      document.getElementById('quickDietText').value = p.diet || '';
+      document.getElementById('quickDietModal').classList.add('active');
+    }
+    function closeQuickDietModal() { document.getElementById('quickDietModal').classList.remove('active'); }
+    function setQuickDietPreset(text) { document.getElementById('quickDietText').value = text; }
+    function saveQuickDiet() {
+      const id = parseInt(document.getElementById('quickDietPatientId').value);
+      const val = document.getElementById('quickDietText').value.trim();
+      const p = patients.find(x => x.id === id);
+      if(p) { p.diet = val; saveToStorage(); updateUI(); closeQuickDietModal(); }
+    }
+
+    // ==== QUICK MEDS LOGIC ====
+    let tempQuickDrugs = [];
+    function openQuickMedsModal(id) {
+      const p = patients.find(x => x.id === id);
+      if(!p) return;
+      document.getElementById('quickMedsPatientId').value = p.id;
+      tempQuickDrugs = p.drugs ? [...p.drugs] : [];
+      document.getElementById('quickNewDrugName').value = '';
+      document.getElementById('quickNewDrugStartDate').value = todayISO;
+      renderQuickMedsList();
+      document.getElementById('quickMedsModal').classList.add('active');
+    }
+    function closeQuickMedsModal() { document.getElementById('quickMedsModal').classList.remove('active'); }
+    function renderQuickMedsList() {
+      const c = document.getElementById('quickMedsListContainer');
+      c.innerHTML = tempQuickDrugs.map((d, i) => {
+        const days = (calculateDaysDiff(d.startDate) ?? 0) + 1;
+        return `
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded p-2 text-xs">
+            <span class="font-medium">${d.name} <strong class="text-pink-600">(D${days})</strong></span>
+            <button type="button" onclick="removeQuickDrug(${i})" class="text-rose-500"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        `;
+      }).join('');
+    }
+    function addQuickDrug() {
+      const name = document.getElementById('quickNewDrugName').value.trim();
+      const date = document.getElementById('quickNewDrugStartDate').value || todayISO;
+      if(name) {
+        tempQuickDrugs.push({name, startDate: date});
+        document.getElementById('quickNewDrugName').value = '';
+        renderQuickMedsList();
+      }
+    }
+    function removeQuickDrug(idx) {
+      tempQuickDrugs.splice(idx, 1);
+      renderQuickMedsList();
+    }
+    function saveQuickMeds() {
+      const id = parseInt(document.getElementById('quickMedsPatientId').value);
+      const p = patients.find(x => x.id === id);
+      if(p) {
+        p.drugs = [...tempQuickDrugs];
+        saveToStorage(); updateUI(); closeQuickMedsModal();
+      }
+    }
+
+    // ==== QUICK I/O LOGIC ====
+    function openQuickIOModal(id) {
+      const p = patients.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('quickIOPatientId').value = p.id;
+      document.getElementById('quickInputVol').value = p.inputVol || '';
+      document.getElementById('quickOutputVol').value = p.outputVol || '';
+      document.getElementById('quickNetBalance').value = p.netBalance || '';
+      document.getElementById('quickIOModal').classList.add('active');
+    }
+
+    function closeQuickIOModal() { document.getElementById('quickIOModal').classList.remove('active'); }
+
+    function saveQuickIO() {
+      const id = parseInt(document.getElementById('quickIOPatientId').value);
+      const inV = document.getElementById('quickInputVol').value.trim();
+      const outV = document.getElementById('quickOutputVol').value.trim();
+      const netV = document.getElementById('quickNetBalance').value.trim();
+      const p = patients.find(x => x.id === id);
+      if (p) {
+        p.inputVol = inV;
+        p.outputVol = outV;
+        p.netBalance = netV;
+        saveToStorage();
+        updateUI();
+        closeQuickIOModal();
+      }
+    }
+
+    function setProcedureDateToday() { document.getElementById('surgeryDate').value = todayISO; }
+    function setTempProcToday() { document.getElementById('tempProcDate').value = todayISO; }
+
+    function openPatientModal(patientId = null) {
+      currentProcedures = [];
+      currentScans = [];
+      currentDrugs = [];
+      currentOpinions = [];
+      tempScanFilesData = [];
+      clearTempOpinionPhoto();
+
+      document.getElementById('patientForm').reset();
+      document.getElementById('editPatientId').value = '';
+      document.getElementById('modalTitle').innerText = 'Inpatient Record (New Admission)';
+      document.getElementById('tempScanFileName').innerText = 'No scan selected';
+
+      if (patientId) {
+        const p = patients.find(x => x.id === patientId);
+        if (p) {
+          document.getElementById('editPatientId').value = p.id;
+          document.getElementById('wardCategory').value = p.category || 'MSW';
+          document.getElementById('patientName').value = p.name || '';
+          document.getElementById('age').value = p.age || '';
+          document.getElementById('gender').value = p.gender || 'M';
+          document.getElementById('hospitalNo').value = p.hospitalNo || '';
+          document.getElementById('admissionNo').value = p.admissionNo || '';
+          document.getElementById('admissionDate').value = p.admissionDate || todayISO;
+          document.getElementById('diagnosis').value = p.diagnosis || '';
+          document.getElementById('surgeryDate').value = p.surgeryDate || '';
+          document.getElementById('patientPlan').value = p.plan || '';
+          document.getElementById('todoToday').value = p.todoToday || '';
+          document.getElementById('inputVol').value = p.inputVol || '';
+          document.getElementById('outputVol').value = p.outputVol || '';
+          document.getElementById('netBalance').value = p.netBalance || '';
+          document.getElementById('drainOutput').value = p.drainOutput || '';
+          document.getElementById('foleyStatus').value = p.foleyStatus || '';
+          document.getElementById('rtStomaStatus').value = p.rtStomaStatus || '';
+          document.getElementById('vitals').value = p.vitals || '';
+          document.getElementById('cbg').value = p.cbg || '';
+          document.getElementById('complaints').value = p.complaints || '';
+          document.getElementById('exam').value = p.exam || '';
+          document.getElementById('diet').value = p.diet || '';
+          
+          currentProcedures = p.procedures ? [...p.procedures] : [];
+          currentDrugs = p.drugs ? [...p.drugs] : [];
+          currentOpinions = p.opinions ? [...p.opinions] : [];
+          currentScans = p.scans ? [...p.scans] : [];
+          
+          document.getElementById('modalTitle').innerText = `Update Record: ${p.name}`;
+        }
+      } else {
+        document.getElementById('admissionDate').value = todayISO;
+        document.getElementById('newDrugStartDate').value = todayISO;
+      }
+
+      renderStagedProceduresList();
+      renderStagedScansList();
+      renderTempDrugList();
+      renderTempOpinionList();
+      document.getElementById('patientModal').classList.add('active');
+    }
+
+    function closePatientModal() { document.getElementById('patientModal').classList.remove('active'); }
+    function openMonthlyStatsModal() { renderMonthlyDashboard(); document.getElementById('monthlyStatsModal').classList.add('active'); }
+    function closeMonthlyStatsModal() { document.getElementById('monthlyStatsModal').classList.remove('active'); }
+    function openBulkVitalsModal() { document.getElementById('rawVitalsInput').value = ''; document.getElementById('bulkVitalsModal').classList.add('active'); }
+    function closeBulkVitalsModal() { document.getElementById('bulkVitalsModal').classList.remove('active'); }
+    function openBulkCBGModal() { document.getElementById('rawCBGInput').value = ''; document.getElementById('bulkCBGModal').classList.add('active'); }
+    function closeBulkCBGModal() { document.getElementById('bulkCBGModal').classList.remove('active'); }
+    function openBulkDrainsModal() { document.getElementById('rawDrainsInput').value = ''; document.getElementById('bulkDrainsModal').classList.add('active'); }
+    function closeBulkDrainsModal() { document.getElementById('bulkDrainsModal').classList.remove('active'); }
+
+    function addProcedureToTempList() {
+      const name = document.getElementById('tempProcName').value.trim();
+      const date = document.getElementById('tempProcDate').value || todayISO;
+      if (!name) return;
+      currentProcedures.push({ id: Date.now(), name, date });
+      document.getElementById('tempProcName').value = '';
+      document.getElementById('tempProcDate').value = '';
+      renderStagedProceduresList();
+    }
+
+    function removeProcedureFromTempList(id) {
+      currentProcedures = currentProcedures.filter(pr => pr.id !== id);
+      renderStagedProceduresList();
+    }
+
+    function renderStagedProceduresList() {
+      const container = document.getElementById('stagedProceduresContainer');
+      container.innerHTML = currentProcedures.map((pr) => {
+        const days = calculateDaysDiff(pr.date);
+        const podStr = (days !== null && days >= 0) ? `POD# ${days}` : 'Planned';
+        return `
+          <div class="flex items-center justify-between p-2 bg-white border border-amber-200 rounded-lg text-xs">
+            <div>
+              <span class="font-bold text-slate-800">S/p ${pr.name}</span>
+              <span class="ml-1.5 font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">${podStr}</span>
+            </div>
+            <button type="button" onclick="removeProcedureFromTempList(${pr.id})" class="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addDrugToTempList() {
+      const name = document.getElementById('newDrugName').value.trim();
+      const date = document.getElementById('newDrugStartDate').value || todayISO;
+      if (!name) return;
+      currentDrugs.push({ name, startDate: date });
+      document.getElementById('newDrugName').value = '';
+      renderTempDrugList();
+    }
+
+    function removeDrugFromTempList(idx) {
+      currentDrugs.splice(idx, 1);
+      renderTempDrugList();
+    }
+
+    function renderTempDrugList() {
+      const container = document.getElementById('drugListContainer');
+      container.innerHTML = currentDrugs.map((d, idx) => {
+        const dayCount = (calculateDaysDiff(d.startDate) ?? 0) + 1;
+        return `
+          <div class="flex items-center justify-between bg-white border border-indigo-100 rounded-lg p-2 text-xs">
+            <span class="font-medium text-slate-800">${d.name} <strong class="text-indigo-600 font-bold">(D${dayCount})</strong></span>
+            <button type="button" onclick="removeDrugFromTempList(${idx})" class="text-rose-500 hover:text-rose-700 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function handleSavePatient(e) {
+      e.preventDefault();
+      const id = document.getElementById('editPatientId').value;
+      const rawCategory = document.getElementById('wardCategory').value;
+      const isDayCare = (rawCategory === 'DayCare');
+      const admDate = document.getElementById('admissionDate').value || todayISO;
+
+      const patientData = {
+        id: id ? parseInt(id) : Date.now(),
+        admissionDate: admDate,
+        hospitalNo: document.getElementById('hospitalNo').value.trim(),
+        admissionNo: document.getElementById('admissionNo').value.trim(),
+        category: isDayCare ? 'Discharges' : rawCategory,
+        isDayCare: isDayCare,
+        dischargeDate: (isDayCare || rawCategory === 'Discharges') ? todayISO : null,
+        name: document.getElementById('patientName').value.trim(),
+        age: document.getElementById('age').value.trim(),
+        gender: document.getElementById('gender').value,
+        diagnosis: document.getElementById('diagnosis').value.trim(),
+        procedures: [...currentProcedures],
+        scans: [...currentScans],
+        plan: document.getElementById('patientPlan').value.trim(),
+        todoToday: document.getElementById('todoToday').value.trim(),
+        inputVol: document.getElementById('inputVol').value.trim(),
+        outputVol: document.getElementById('outputVol').value.trim(),
+        netBalance: document.getElementById('netBalance').value.trim(),
+        drainOutput: document.getElementById('drainOutput').value.trim(),
+        foleyStatus: document.getElementById('foleyStatus').value.trim(),
+        rtStomaStatus: document.getElementById('rtStomaStatus').value.trim(),
+        vitals: document.getElementById('vitals').value.trim(),
+        cbg: document.getElementById('cbg').value.trim(),
+        complaints: document.getElementById('complaints').value.trim(),
+        exam: document.getElementById('exam').value.trim(),
+        diet: document.getElementById('diet').value.trim(),
+        drugs: [...currentDrugs],
+        opinions: [...currentOpinions]
+      };
+
+      if (id) {
+        const index = patients.findIndex(p => p.id === parseInt(id));
+        if (index !== -1) patients[index] = patientData;
+      } else {
+        patients.push(patientData);
+      }
+
+      saveToStorage();
+      closePatientModal();
+      updateUI();
+    }
+
+    function dischargePatient(id) {
+      const p = patients.find(x => x.id === id);
+      if (p && confirm(`Mark ${p.name} as Discharged today?`)) {
+        p.category = 'Discharges';
+        p.dischargeDate = todayISO;
+        saveToStorage();
+        updateUI();
+      }
+    }
+
+    function deletePatientPermanently(id) {
+      if (confirm("Delete patient record?")) {
+        patients = patients.filter(p => p.id !== id);
+        saveToStorage();
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      renderWardSubTabs();
+      renderPatientList();
+      renderOutputs();
+    }
+
+    function openQuickComplaintModal(id) {
+      const p = patients.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('quickComplaintPatientId').value = p.id;
+      document.getElementById('quickComplaintText').value = p.complaints || '';
+      document.getElementById('quickComplaintModal').classList.add('active');
+    }
+
+    function closeQuickComplaintModal() { document.getElementById('quickComplaintModal').classList.remove('active'); }
+    
+    function saveQuickComplaint() {
+      const id = parseInt(document.getElementById('quickComplaintPatientId').value);
+      const text = document.getElementById('quickComplaintText').value.trim();
+      const p = patients.find(x => x.id === id);
+      if (p) {
+        p.complaints = text;
+        saveToStorage();
+        updateUI();
+        closeQuickComplaintModal();
+      }
+    }
+
+    function openQuickTodoModal(id) {
+      const p = patients.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('quickTodoPatientId').value = p.id;
+      document.getElementById('quickTodoText').value = p.todoToday || '';
+      document.getElementById('quickTodoModal').classList.add('active');
+    }
+
+    function closeQuickTodoModal() { document.getElementById('quickTodoModal').classList.remove('active'); }
+    
+    function saveQuickTodo() {
+      const id = parseInt(document.getElementById('quickTodoPatientId').value);
+      const text = document.getElementById('quickTodoText').value.trim();
+      const p = patients.find(x => x.id === id);
+      if (p) {
+        p.todoToday = text;
+        saveToStorage();
+        updateUI();
+        closeQuickTodoModal();
+      }
+    }
+
+    function renderPatientList() {
+      const container = document.getElementById('patientListContainer');
+      const activePatients = patients.filter(p => p.category !== 'Discharges' && p.category !== 'Transfer out');
+
+      if (document.getElementById('tabCensusBadge')) document.getElementById('tabCensusBadge').innerText = activePatients.length;
+      const activeTodos = patients.filter(p => p.todoToday && p.category !== 'Discharges' && p.category !== 'Transfer out');
+      if (document.getElementById('tabTodoBadge')) document.getElementById('tabTodoBadge').innerText = activeTodos.length;
+
+      let displayPatients = activePatients;
+      if (currentSelectedWardFilter !== 'ALL') {
+        displayPatients = activePatients.filter(p => p.category === currentSelectedWardFilter);
+      }
+
+      if (displayPatients.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 italic py-12 text-center">No active inpatients in ${currentSelectedWardFilter === 'ALL' ? 'the census' : currentSelectedWardFilter}.</p>`;
+        return;
+      }
+
+      container.innerHTML = displayPatients.map((p, index) => {
+        const isDischarged = p.category === 'Discharges';
+        const wardInfo = WARD_CONFIG.find(w => w.key === p.category) || { label: p.category, color: "bg-slate-100 text-slate-800 border-slate-300" };
+
+        const idLine = (p.hospitalNo || p.admissionNo) ? `<div class="text-[10px] text-slate-500 font-mono mt-0.5">${p.hospitalNo ? `<span><strong>MRD:</strong> ${p.hospitalNo}</span> ` : ''}${p.admissionNo ? `<span class="ml-1.5"><strong>IP:</strong> ${p.admissionNo}</span>` : ''}</div>` : '';
+        
+        // Antibiotics / Drug Badges
+        const drugBadges = (p.drugs && p.drugs.length > 0) ? `<div class="mt-2 flex flex-wrap gap-1">${p.drugs.map(d => { const day = (calculateDaysDiff(d.startDate) ?? 0) + 1; return `<span class="bg-indigo-50 border border-indigo-200 text-indigo-900 text-[10px] px-2 py-0.5 rounded font-medium">${d.name} <strong class="text-indigo-600 font-bold">(D${day})</strong></span>`; }).join('')}</div>` : '';
+        
+        // Opinions Badges
+        const opinionBadges = (p.opinions && p.opinions.length > 0) ? `<div class="mt-1.5 flex flex-wrap gap-1">${p.opinions.map(op => `
+          <span class="bg-purple-50 border border-purple-200 text-purple-900 text-[10px] px-2 py-0.5 rounded font-semibold flex items-center gap-1">
+            ${op.dept}: ${op.reason} ${op.photo ? '<i class="fa-solid fa-paperclip text-purple-500"></i>' : ''}
+          </span>`).join('')}</div>` : '';
+          
+        const procBadges = (p.procedures && p.procedures.length > 0) ? `<div class="mt-1 space-y-0.5">${p.procedures.map(pr => { const days = calculateDaysDiff(pr.date); const podStr = (days !== null && days >= 0) ? `POD# ${days}` : 'Planned'; return `<span class="inline-block text-[11px] font-medium text-slate-700 mr-2">S/p ${pr.name} (<strong class="text-amber-800">${podStr}</strong>)</span>`; }).join('')}</div>` : '';
+        const planBadge = p.plan ? `<div class="mt-1 text-[11px] text-slate-700"><strong class="text-teal-800">Plan:</strong> ${p.plan}</div>` : '';
+        const todoBadge = p.todoToday ? `<div class="mt-1 p-1.5 bg-indigo-50/60 border border-indigo-200 rounded text-[11px] text-indigo-950 font-medium flex items-center gap-1.5"><i class="fa-solid fa-list-check text-indigo-600"></i><span><strong class="text-indigo-900">To-Do:</strong> ${p.todoToday}</span></div>` : '';
+        const complaintBadge = p.complaints ? `<div class="mt-1 text-[11px] text-slate-700 bg-amber-50/60 border border-amber-200/80 p-1.5 rounded"><strong class="text-amber-900">C/o:</strong> ${p.complaints}</div>` : '';
+        const dietBadge = p.diet ? `<div class="mt-1 text-[11px] text-slate-700"><strong class="text-sky-800">Diet:</strong> ${p.diet}</div>` : '';
+
+        // I/O Balance Badge
+        const ioBadge = (p.inputVol || p.outputVol || p.netBalance) ? `<div class="mt-1.5 p-1.5 bg-emerald-50/70 border border-emerald-200 rounded text-[11px] text-emerald-950 font-mono"><strong>24h I/O:</strong> In: ${p.inputVol || '-'} | Out: ${p.outputVol || '-'} | Net: <strong>${p.netBalance || '-'}</strong></div>` : '';
+
+        const scanGallery = (p.scans && p.scans.length > 0) ? `
+          <div class="mt-2 pt-2 border-t border-slate-100">
+            <span class="text-[10px] font-semibold text-indigo-700 block mb-1"><i class="fa-solid fa-file-waveform"></i> Scans & Radiology (${p.scans.length}):</span>
+            <div class="flex items-center gap-2 overflow-x-auto py-1">
+              ${p.scans.map(sc => `
+                <div class="relative flex-shrink-0 group">
+                  <img src="${sc.data}" onclick="openImageModal('${sc.data}', '${p.name} - ${sc.type} (${sc.description})')" class="w-12 h-12 rounded-lg object-cover border border-indigo-200 cursor-pointer shadow-sm" />
+                  <span class="block text-[9px] text-center font-bold text-slate-700 truncate w-12">${sc.type}</span>
+                  <button type="button" onclick="deletePatientScanDirectly(${p.id}, ${sc.id})" class="absolute -top-1 -right-1 bg-rose-600 hover:bg-rose-700 text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] shadow cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : '';
+
+        let linesSummary = [];
+        if (p.drainOutput) linesSummary.push(`<strong>DT:</strong> ${p.drainOutput}`);
+        if (p.foleyStatus) linesSummary.push(`<strong>Foley:</strong> ${p.foleyStatus}`);
+        if (p.rtStomaStatus) linesSummary.push(`<strong>RT/Stoma:</strong> ${p.rtStomaStatus}`);
+        const linesHTML = linesSummary.length > 0 ? `<div class="mt-1.5 p-1.5 bg-teal-50/50 border border-teal-200 rounded text-[11px] text-teal-950 font-mono">${linesSummary.join(' | ')}</div>` : '';
+
+        const emergencyBadge = p.isEmergencyOT ? `<div class="mt-1 p-1.5 bg-rose-50 border border-rose-300 rounded text-[11px] font-bold text-rose-900 flex items-center justify-between emergency-pulse"><span><i class="fa-solid fa-truck-medical text-rose-600 mr-1"></i> ${p.emergencyPriority || 'Emergency OT'}</span><span class="text-[10px] font-normal text-rose-800">${p.npoStatus ? `NPO: ${p.npoStatus}` : ''}</span></div>` : '';
+        const pacBadge = (p.pacStatus || p.otPlan) ? `<div class="mt-1 text-[10px] text-slate-700 bg-slate-100 border border-slate-200 p-1 rounded font-medium">${p.pacStatus ? `PAC: ${p.pacStatus}` : ''} ${p.otPlan ? ` | OT Plan: ${p.otPlan}` : ''}</div>` : '';
+
+        return `
+          <div class="p-3.5 bg-white border border-slate-200/80 rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.02)] text-xs transition hover:border-slate-300">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-bold text-slate-900">${index + 1}. ${p.name}</span>
+                  <span class="text-slate-500 font-medium">${p.age}/${p.gender}</span>
+                  <span class="px-2 py-0.2 rounded text-[10px] font-semibold border ${wardInfo.color}">[${wardInfo.label}]</span>
+                </div>
+                ${idLine}
+                ${emergencyBadge}
+                <p class="text-slate-700 mt-1 font-medium"><strong class="text-slate-900 font-semibold">Dx:</strong> ${p.diagnosis}</p>
+                ${procBadges}
+                ${planBadge}
+                ${todoBadge}
+                ${complaintBadge}
+                ${dietBadge}
+                ${pacBadge}
+                ${p.vitals ? `<div class="text-slate-600 mt-1 font-mono text-[11px] bg-slate-50 p-1.5 rounded border border-slate-100 whitespace-pre-line">${p.vitals} ${p.cbg ? ' | CBG: ' + p.cbg : ''}</div>` : ''}
+                ${linesHTML}
+                ${ioBadge}
+                ${drugBadges}
+                ${opinionBadges}
+                ${scanGallery}
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap gap-1.5">
+                  <button type="button" onclick="openQuickIOModal(${p.id})" class="text-[10px] bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:border-emerald-300 px-2 py-1 rounded font-semibold border border-emerald-200 shadow-sm flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-scale-balanced text-emerald-600"></i> I/O</button>
+                  <button type="button" onclick="openQuickDietModal(${p.id})" class="text-[10px] bg-sky-50 text-sky-800 hover:bg-sky-100 hover:border-sky-300 px-2 py-1 rounded font-semibold border border-sky-200 shadow-sm flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-utensils text-sky-600"></i> Diet</button>
+                  <button type="button" onclick="openQuickMedsModal(${p.id})" class="text-[10px] bg-pink-50 text-pink-800 hover:bg-pink-100 hover:border-pink-300 px-2 py-1 rounded font-semibold border border-pink-200 shadow-sm flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-pills text-pink-600"></i> Meds</button>
+                  <button type="button" onclick="openQuickScanModal(${p.id})" class="text-[10px] bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-200 px-2 py-1 rounded font-semibold border border-indigo-200 shadow-sm flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-camera"></i> Scan</button>
+                  <button type="button" onclick="openQuickOpinionModal(${p.id})" class="text-[10px] bg-purple-50 text-purple-700 hover:bg-purple-100 hover:border-purple-200 px-2 py-1 rounded font-semibold border border-purple-200 shadow-sm flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-user-doctor text-purple-600"></i> Opinion</button>
+                  <button type="button" onclick="openQuickComplaintModal(${p.id})" class="text-[10px] bg-amber-50 text-amber-800 hover:bg-amber-100 hover:border-amber-200 px-2 py-1 rounded font-semibold border border-amber-200 shadow-sm flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-comment-medical text-amber-600"></i> Complaint</button>
+                  <button type="button" onclick="openQuickTodoModal(${p.id})" class="text-[10px] bg-slate-50 text-slate-700 hover:bg-indigo-50 hover:text-indigo-800 hover:border-indigo-200 px-2 py-1 rounded font-semibold border border-slate-200 shadow-sm flex items-center gap-1 cursor-pointer"><i class="fa-solid fa-list-check text-indigo-600"></i> To-Do</button>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1 items-end">
+                <button type="button" onclick="openPatientModal(${p.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded font-semibold text-[11px] flex items-center gap-1 cursor-pointer transition"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                ${!isDischarged ? `<button type="button" onclick="dischargePatient(${p.id})" class="text-slate-400 hover:text-teal-700 px-2 py-1 rounded font-medium cursor-pointer text-[10px] transition"><i class="fa-solid fa-arrow-right-from-bracket"></i> D/C</button>` : ''}
+                <button type="button" onclick="deletePatientPermanently(${p.id})" class="text-slate-300 hover:text-rose-600 px-1 py-1 cursor-pointer mt-0.5 transition"><i class="fa-solid fa-trash-can"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderOutputs() {
+      const activeWards = WARD_CONFIG.filter(w => w.key !== 'ALL').map(w => ({ key: w.key, label: w.label, list: patients.filter(p => p.category === w.key) })).filter(w => w.list.length > 0);
+      const totalActiveCensus = activeWards.reduce((acc, curr) => acc + curr.list.length, 0);
+      const greeting = (new Date().getHours() < 12) ? 'Good morning Sir/Madam' : 'Good evening Sir/Madam';
+
+      let out = `${greeting}\nTotal census: ${totalActiveCensus}\n`;
+      activeWards.forEach(w => { out += `${w.label}: ${w.list.length}\n`; });
+      out += `\n`;
+
+      let counter = 1;
+
+      activeWards.forEach(w => {
+        out += `${w.label} : ${w.list.length}\n`;
+        w.list.forEach(p => {
+          out += `${counter++}.${p.name} ${p.age}/${p.gender}\n`;
+          if (p.diagnosis) out += `Diagnosis- ${p.diagnosis}\n`;
+          if (p.procedures && p.procedures.length > 0) {
+            p.procedures.forEach(pr => {
+              const days = calculateDaysDiff(pr.date);
+              out += `S/p ${pr.name} ${(days !== null && days >= 0) ? `POD# ${days}` : ''}\n`.trim() + `\n`;
+            });
+          }
+          if (p.plan) out += `Plan: ${p.plan}\n`;
+          if (p.complaints) out += `C/o: ${p.complaints}\n`;
+          if (p.vitals) out += `Vitals:\n${p.vitals}\n`;
+          if (p.drainOutput) out += `DT: ${p.drainOutput}\n`;
+          if (p.cbg) out += `CBG: ${p.cbg}\n`;
+          if (p.inputVol || p.outputVol || p.netBalance) {
+            out += `24h I/O: In ${p.inputVol || '-'} | Out ${p.outputVol || '-'} | Net ${p.netBalance || '-'}\n`;
+          }
+          if (p.exam) out += `L/E: ${p.exam}\n`;
+          
+          let onSection = [];
+          if (p.diet) onSection.push(p.diet);
+          if (p.drugs && p.drugs.length > 0) {
+            p.drugs.forEach(d => {
+              const days = (calculateDaysDiff(d.startDate) ?? 0) + 1;
+              onSection.push(`${d.name} (D${days})`);
+            });
+          }
+          if (onSection.length > 0) {
+            out += `On:\n${onSection.join('\n')}\n`;
+          }
+
+          if (p.scans && p.scans.length > 0) {
+            out += `Scans/Reports: ${p.scans.map(s => `${s.type} (${s.description})`).join(', ')}\n`;
+          }
+          if (p.opinions && p.opinions.length > 0) {
+            p.opinions.forEach(op => { out += `${op.dept} Opinion (${op.reason}):\n${op.advice}\n`; });
+          }
+          out += `\n`;
+        });
+      });
+
+      out += `Thankyou Sir/Madam`;
+      if (document.getElementById('outputArea')) document.getElementById('outputArea').value = out.trim();
+
+      const activePatientsWithTodo = patients.filter(p => p.todoToday && p.category !== 'Discharges' && p.category !== 'Transfer out');
+      let todoOut = `📋 SURGICAL WARD TO-DO LIST - ${formatDateDMY(todayISO)}\nTotal Pending Tasks: ${activePatientsWithTodo.length}\n\n`;
+      
+      if (activePatientsWithTodo.length === 0) {
+        todoOut += `No pending tasks recorded for today.`;
+      } else {
+        activePatientsWithTodo.forEach((p, idx) => {
+          todoOut += `${idx + 1}. [${p.category}] ${p.name} (${p.age}/${p.gender})\n   📌 ${p.todoToday}\n\n`;
+        });
+      }
+
+      if (document.getElementById('todoOutputArea')) document.getElementById('todoOutputArea').value = todoOut.trim();
+    }
+
+    function copyHandover() {
+      const output = document.getElementById('outputArea');
+      output.select();
+      navigator.clipboard.writeText(output.value);
+      alert("Surgical handover copied.");
+    }
+
+    function sendHandoverWhatsApp() {
+      const output = document.getElementById('outputArea').value;
+      if (!output) return;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(output)}`, '_blank');
+    }
+
+    function copyTodoList() {
+      const output = document.getElementById('todoOutputArea');
+      output.select();
+      navigator.clipboard.writeText(output.value);
+      alert("To-Do list copied.");
+    }
+
+    function sendTodoWhatsApp() {
+      const output = document.getElementById('todoOutputArea').value;
+      if (!output) return;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(output)}`, '_blank');
+    }
+
+    function renderMonthlyDashboard() {
+      const selectedMonth = (document.getElementById('selectedMonth') && document.getElementById('selectedMonth').value) || currentMonthStr;
+      const monthPatients = patients.filter(p => p.admissionDate && p.admissionDate.startsWith(selectedMonth));
+      const tbody = document.getElementById('statMonthlyTableBody');
+      if (tbody) {
+        tbody.innerHTML = monthPatients.map(p => `
+          <tr class="hover:bg-slate-50 font-mono text-[11px]">
+            <td class="p-2.5 text-slate-700">${formatDateDMY(p.admissionDate)}</td>
+            <td class="p-2.5 text-slate-600">${p.hospitalNo || '-'}</td>
+            <td class="p-2.5 font-sans font-semibold text-slate-800">${p.name} (${p.age}/${p.gender})</td>
+            <td class="p-2.5">${p.category}</td>
+            <td class="p-2.5 font-sans text-slate-600">${p.diagnosis}</td>
+            <td class="p-2.5">${p.category === 'Discharges' ? 'Discharged' : 'Inpatient'}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function processBulkVitalsBatch() {
+      const raw = document.getElementById('rawVitalsInput').value;
+      if (!raw.trim()) return;
+      const blocks = raw.split(/\n\s*\n/);
+      blocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length === 0) return;
+        const searchName = lines[0].toLowerCase();
+        let bp = '', pr = '';
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i].includes('/')) bp = lines[i];
+          else if (/^\d{2,3}$/.test(lines[i])) pr = lines[i];
+        }
+        const patient = patients.find(p => p.name.toLowerCase().includes(searchName));
+        if (patient) {
+          let v = '';
+          if (bp) v += `BP: ${bp} mmHg\n`;
+          if (pr) v += `PR: ${pr} bpm`;
+          if (v) patient.vitals = v.trim();
+        }
+      });
+      saveToStorage();
+      updateUI();
+      closeBulkVitalsModal();
+    }
+
+    function processBulkCBGBatch() {
+      const raw = document.getElementById('rawCBGInput').value;
+      if (!raw.trim()) return;
+      const blocks = raw.split(/\n\s*\n/);
+      blocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length === 0) return;
+        const searchName = lines[0].toLowerCase();
+        const rawCbgText = lines.slice(1).join(' ').trim();
+        const patient = patients.find(p => p.name.toLowerCase().includes(searchName));
+        if (patient && rawCbgText) patient.cbg = rawCbgText;
+      });
+      saveToStorage();
+      updateUI();
+      closeBulkCBGModal();
+    }
+
+    function processBulkDrainsBatch() {
+      const raw = document.getElementById('rawDrainsInput').value;
+      if (!raw.trim()) return;
+      const blocks = raw.split(/\n\s*\n/);
+      blocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length === 0) return;
+        const searchName = lines[0].toLowerCase();
+        let dt = '', foley = '', rt = '';
+        for (let i = 1; i < lines.length; i++) {
+          const l = lines[i].toLowerCase();
+          if (l.includes('dt') || l.includes('drain')) dt = lines[i].replace(/dt:?/i, '').trim();
+          else if (l.includes('foley') || l.includes('cbd')) foley = lines[i].replace(/(foley'?s?|cbd):?/i, '').trim();
+          else if (l.includes('rt') || l.includes('stoma')) rt = lines[i].replace(/(rt|stoma):?/i, '').trim();
+        }
+        const patient = patients.find(p => p.name.toLowerCase().includes(searchName));
+        if (patient) {
+          if (dt) patient.drainOutput = dt;
+          if (foley) patient.foleyStatus = foley;
+          if (rt) patient.rtStomaStatus = rt;
+        }
+      });
+      saveToStorage();
+      updateUI();
+      closeBulkDrainsModal();
+    }
+  </script>
+</body>
+</html>
