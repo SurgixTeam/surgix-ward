@@ -134,6 +134,7 @@
       <form id="patientForm" onsubmit="handleSavePatient(event)" class="p-5 overflow-y-auto space-y-4 text-xs">
         <input type="hidden" id="editPatientId" value="">
 
+        <!-- DEMOGRAPHICS -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Ward *</label>
@@ -208,24 +209,24 @@
               </div>
             </div>
             
-            <input type="file" id="mainScanCamera" accept="image/*" capture="environment" class="hidden" onchange="handleScanFilesSelected(event)">
-            <input type="file" id="mainScanGallery" accept="image/*" class="hidden" onchange="handleScanFilesSelected(event)">
+            <!-- Hidden inputs: One for Camera, One for Gallery -->
+            <input type="file" id="mainScanCamera" accept="image/*" capture="environment" multiple class="hidden" onchange="handleScanFilesSelected(event)">
+            <input type="file" id="mainScanGallery" accept="image/*" multiple class="hidden" onchange="handleScanFilesSelected(event)">
             
             <div class="grid grid-cols-2 gap-2 mt-2">
               <button type="button" onclick="document.getElementById('mainScanCamera').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center justify-center gap-1"><i class="fa-solid fa-camera"></i> Camera</button>
               <button type="button" onclick="document.getElementById('mainScanGallery').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center justify-center gap-1"><i class="fa-solid fa-image"></i> Gallery</button>
             </div>
             
-            <button type="button" id="ocrMainScanBtn" onclick="runMainScanGeminiOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold mt-1 cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read</button>
+            <button type="button" id="ocrMainScanBtn" onclick="runMainScanGeminiOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold mt-1 cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
             
             <div id="mainScanOcrProgress" style="display: none;" class="text-[10px] text-indigo-700 font-bold mt-1 text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Extracting text via AI...</div>
 
             <div class="flex items-center justify-between mt-2 pt-2 border-t border-indigo-100">
                <span id="tempScanFileName" class="text-[10px] text-slate-500 italic truncate max-w-xs">No scan attached</span>
-               <button type="button" onclick="addScansToTempList()" class="bg-indigo-800 text-white py-1 px-3 rounded text-xs font-semibold cursor-pointer shadow-sm">Save Scan to File</button>
+               <button type="button" onclick="addScansToTempList()" class="bg-indigo-800 text-white py-1 px-3 rounded text-xs font-semibold cursor-pointer shadow-sm">Save to File</button>
             </div>
           </div>
-          <!-- Already Saved Scans (Now with OCR button) -->
           <div id="stagedScansContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 empty:hidden"></div>
         </div>
 
@@ -284,7 +285,7 @@
                 <button type="button" onclick="document.getElementById('mainOpCamera').click()" class="bg-purple-100 text-purple-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer"><i class="fa-solid fa-camera"></i> Camera</button>
                 <button type="button" onclick="document.getElementById('mainOpGallery').click()" class="bg-purple-100 text-purple-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer"><i class="fa-solid fa-image"></i> Gallery</button>
               </div>
-              <button type="button" id="ocrOpinionBtn" onclick="runOpinionGeminiOCR()" class="w-full bg-purple-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read</button>
+              <button type="button" id="ocrOpinionBtn" onclick="runOpinionGeminiOCR()" class="w-full bg-purple-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
               
               <div id="opinionOcrProgress" style="display: none;" class="text-[10px] text-purple-800 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin text-purple-600 mr-1"></i> Transcribing via AI...</div>
               <div id="opinionPhotoThumb" style="display: none;" class="mt-1"></div>
@@ -362,7 +363,7 @@
         <div id="quickScanOcrProgress" style="display:none;" class="text-[10px] text-indigo-600 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Extracting findings...</div>
         
         <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium">
-           <span id="quickScanFileName">No image attached</span>
+           <span id="quickScanFileName">No files selected</span>
         </div>
         
         <button type="button" onclick="saveQuickScans()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg shadow-sm mt-2 cursor-pointer">Save to Patient File</button>
@@ -431,7 +432,7 @@
     // ==========================================
     // GLOBALS & CONFIG
     // ==========================================
-    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"; 
+    const GEMINI_API_KEY = "AQ.Ab8RN6KtU_hgJSEzr1hdpdkR9NQjz1Zf9OAeg-ri1TnfAA3FAQ"; 
 
     const firebaseConfig = {
       apiKey: "AIzaSyDXcR9IuXFcOOOSWnL8P1k_IBPRJCNPhtk",
@@ -658,6 +659,7 @@
       tempScanFilesData.forEach(item => { currentScans.push({ id: Date.now() + Math.random(), type, description: desc || 'Report', fileName: item.name, data: item.data, uploadedDate: todayISO }); });
       tempScanFilesData = []; tempMainScanPhotoObj = null;
       document.getElementById('tempScanFileName').innerText = 'No scan attached'; document.getElementById('scanDescription').value = '';
+      document.getElementById('scanFileInput').value = '';
       document.getElementById('ocrMainScanBtn').disabled = true;
       renderStagedScansList();
     }
@@ -878,6 +880,7 @@
     }
     function closePatientModal() { document.getElementById('patientModal').classList.remove('active'); }
 
+    // --- SAVE PATIENT CORE FIX ---
     function handleSavePatient(e) {
       e.preventDefault(); 
       const id = document.getElementById('editPatientId').value; 
