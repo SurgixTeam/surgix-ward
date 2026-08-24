@@ -16,8 +16,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
   
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <!-- Tesseract.js for Local Client-Side OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <style>
     body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -189,7 +193,7 @@
           <div id="stagedProceduresContainer" class="space-y-1.5 pt-1 empty:hidden"></div>
         </div>
 
-        <!-- MAIN MODAL: SCANS & RADIOLOGY -->
+        <!-- MAIN MODAL: SCANS & RADIOLOGY (LOCAL OCR) -->
         <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-200 space-y-3">
           <div class="flex items-center justify-between border-b border-indigo-200/60 pb-1.5">
             <label class="font-bold text-indigo-950 flex items-center gap-1.5"><i class="fa-solid fa-file-waveform"></i> Scans, Labs & Investigations</label>
@@ -216,9 +220,9 @@
               <button type="button" onclick="document.getElementById('mainScanGallery').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer flex items-center justify-center gap-1"><i class="fa-solid fa-image"></i> Gallery</button>
             </div>
             
-            <button type="button" id="ocrMainScanBtn" onclick="runMainScanGeminiOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold mt-1 cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
+            <button type="button" id="ocrMainScanBtn" onclick="runMainScanLocalOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-xs font-bold mt-1 cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Local Browser OCR Read</button>
             
-            <div id="mainScanOcrProgress" style="display: none;" class="text-[10px] text-indigo-700 font-bold mt-1 text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Extracting text via AI...</div>
+            <div id="mainScanOcrProgress" style="display: none;" class="text-[10px] text-indigo-700 font-bold mt-1 text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Scanning text locally...</div>
 
             <div class="flex items-center justify-between mt-2 pt-2 border-t border-indigo-100">
                <span id="tempScanFileName" class="text-[10px] text-slate-500 italic truncate max-w-xs">No scan attached</span>
@@ -254,7 +258,7 @@
           <input type="text" id="rtStomaStatus" placeholder="RT:" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none" />
         </div>
 
-        <!-- MAIN MODAL OPINIONS + GEMINI OCR -->
+        <!-- MAIN MODAL OPINIONS + LOCAL OCR -->
         <div class="bg-purple-50/60 p-3 rounded-xl border border-purple-200 space-y-2.5">
           <label class="font-bold text-purple-950 block border-b border-purple-200 pb-1">Opinions</label>
           <div class="space-y-2 bg-white p-2.5 rounded-lg border border-purple-200">
@@ -283,9 +287,9 @@
                 <button type="button" onclick="document.getElementById('mainOpCamera').click()" class="bg-purple-100 text-purple-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer"><i class="fa-solid fa-camera"></i> Camera</button>
                 <button type="button" onclick="document.getElementById('mainOpGallery').click()" class="bg-purple-100 text-purple-700 py-1.5 rounded-lg text-xs font-bold cursor-pointer"><i class="fa-solid fa-image"></i> Gallery</button>
               </div>
-              <button type="button" id="ocrOpinionBtn" onclick="runOpinionGeminiOCR()" class="w-full bg-purple-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
+              <button type="button" id="ocrOpinionBtn" onclick="runOpinionLocalOCR()" class="w-full bg-purple-700 text-white py-2 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Local Browser OCR Read</button>
               
-              <div id="opinionOcrProgress" style="display: none;" class="text-[10px] text-purple-800 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin text-purple-600 mr-1"></i> Transcribing via AI...</div>
+              <div id="opinionOcrProgress" style="display: none;" class="text-[10px] text-purple-800 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin text-purple-600 mr-1"></i> Scanning locally...</div>
               <div id="opinionPhotoThumb" style="display: none;" class="mt-1"></div>
             </div>
             
@@ -355,9 +359,9 @@
           <button type="button" onclick="document.getElementById('qsGalInput').click()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 py-2 rounded shadow-sm font-bold cursor-pointer"><i class="fa-solid fa-image"></i> Gallery</button>
         </div>
         
-        <button type="button" id="quickScanOcrBtn" onclick="runQuickScanGeminiOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded shadow-sm font-bold mt-1 cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
+        <button type="button" id="quickScanOcrBtn" onclick="runQuickScanLocalOCR()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded shadow-sm font-bold mt-1 cursor-pointer disabled:opacity-50" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Local Browser OCR Read</button>
         
-        <div id="quickScanOcrProgress" style="display:none;" class="text-[10px] text-indigo-600 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Extracting findings...</div>
+        <div id="quickScanOcrProgress" style="display:none;" class="text-[10px] text-indigo-600 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Scanning findings locally...</div>
         
         <div class="flex items-center justify-between text-[11px] text-slate-500 font-medium">
            <span id="quickScanFileName">No files selected</span>
@@ -400,9 +404,9 @@
           <button type="button" onclick="document.getElementById('qoCamInput').click()" class="bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 rounded shadow-sm font-bold cursor-pointer"><i class="fa-solid fa-camera"></i> Camera</button>
           <button type="button" onclick="document.getElementById('qoGalInput').click()" class="bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 rounded shadow-sm font-bold cursor-pointer"><i class="fa-solid fa-image"></i> Gallery</button>
         </div>
-        <button type="button" id="quickOpOcrBtn" onclick="runQuickOpinionGeminiOCR()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded shadow-sm font-bold mt-1 disabled:opacity-50 cursor-pointer" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Gemini AI Read Text</button>
+        <button type="button" id="quickOpOcrBtn" onclick="runQuickOpinionLocalOCR()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded shadow-sm font-bold mt-1 disabled:opacity-50 cursor-pointer" disabled><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Local Browser OCR Read</button>
         
-        <div id="quickOpOcrProgress" style="display:none;" class="text-[10px] text-purple-600 font-bold text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Transcribing via AI...</div>
+        <div id="quickOpOcrProgress" style="display:none;" class="text-[10px] text-purple-600 font-bold text-center"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Scanning locally...</div>
         
         <div class="mt-2">
           <label class="block font-semibold mb-1">Advice & Notes</label>
@@ -429,8 +433,6 @@
     // ==========================================
     // GLOBALS & CONFIG
     // ==========================================
-    const GEMINI_API_KEY = "AQ.Ab8RN6KtU_hgJSEzr1hdpdkR9NQjz1Zf9OAeg-ri1TnfAA3FAQ"; 
-
     const firebaseConfig = {
       apiKey: "AIzaSyDXcR9IuXFcOOOSWnL8P1k_IBPRJCNPhtk",
       authDomain: "surgix-ward.firebaseapp.com",
@@ -561,34 +563,17 @@
     function closeImageModal() { document.getElementById('imageModal').classList.remove('active'); }
 
     // ==========================================
-    // UPDATED GEMINI AI API (SUPPORTS AQ. TOKENS)
+    // TESSERACT.JS LOCAL BROWSER OCR ENGINE
     // ==========================================
-    async function callGeminiAI(base64Image) {
-      const cleanBase64 = base64Image.split(',')[1] || base64Image;
-      const payload = {
-        contents: [{ parts: [ { text: "Accurately transcribe the handwritten clinical notes, lab results, radiologist reports, prescriptions, or opinion advice in this image. Output only clean medical text and findings without conversational preamble." }, { inline_data: { mime_type: "image/jpeg", data: cleanBase64 } } ] }]
-      };
-      
-      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
-
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GEMINI_API_KEY}`
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      const data = await res.json();
-      
-      if(data.error) {
-        console.error("Gemini API Error:", data.error);
-        throw new Error(data.error.message || "API Auth Error");
+    async function callLocalTesseract(base64Image) {
+      try {
+        const result = await Tesseract.recognize(base64Image, 'eng', {
+          logger: m => console.log(m)
+        });
+        return result.data.text.trim() || "No text detected";
+      } catch (err) {
+        throw new Error(err.message || "Local OCR Failed");
       }
-      
-      if(data.candidates && data.candidates[0].content.parts[0].text) return data.candidates[0].content.parts[0].text.trim();
-      throw new Error("Could not extract text from image.");
     }
 
     async function runOCRForExistingScan(id) {
@@ -597,10 +582,10 @@
       const prog = document.getElementById(`ocrProgScan_${id}`);
       if(prog) prog.style.display = 'block';
       try {
-        const r = await callGeminiAI(s.data);
+        const r = await callLocalTesseract(s.data);
         s.description = s.description ? `${s.description} | ${r}` : r;
         renderStagedScansList();
-      } catch(e) { alert("AI Read Failed: " + e.message); }
+      } catch(e) { alert("Local OCR Failed: " + e.message); }
       if(prog) prog.style.display = 'none';
     }
 
@@ -610,10 +595,10 @@
       const prog = document.getElementById(`ocrProgOp_${i}`);
       if(prog) prog.style.display = 'block';
       try {
-        const r = await callGeminiAI(o.photo.data);
+        const r = await callLocalTesseract(o.photo.data);
         o.advice = o.advice ? `${o.advice}\n\n${r}` : r;
         renderTempOpinionList();
-      } catch(e) { alert("AI Read Failed: " + e.message); }
+      } catch(e) { alert("Local OCR Failed: " + e.message); }
       if(prog) prog.style.display = 'none';
     }
 
@@ -622,7 +607,7 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (e) => {
-        compressImage(e.target.result, 800, 0.5, (compressed) => {
+        compressImage(e.target.result, 1000, 0.7, (compressed) => {
           tempScanFilesData = [{ name: file.name, data: compressed }];
           tempMainScanPhotoObj = compressed;
           document.getElementById('tempScanFileName').innerText = `1 scan attached`;
@@ -632,16 +617,16 @@
       reader.readAsDataURL(file);
     }
 
-    async function runMainScanGeminiOCR() {
+    async function runMainScanLocalOCR() {
       if(!tempMainScanPhotoObj) return;
       const prog = document.getElementById('mainScanOcrProgress');
       const btn = document.getElementById('ocrMainScanBtn');
       prog.style.display = 'block'; btn.disabled = true;
       try {
-        const res = await callGeminiAI(tempMainScanPhotoObj);
+        const res = await callLocalTesseract(tempMainScanPhotoObj);
         const desc = document.getElementById('scanDescription');
         desc.value = desc.value ? `${desc.value} | ${res}` : res;
-      } catch(e) { alert("AI Read Failed: " + e.message); }
+      } catch(e) { alert("Local OCR Failed: " + e.message); }
       prog.style.display = 'none'; btn.disabled = false;
     }
 
@@ -673,7 +658,7 @@
               <button type="button" onclick="currentScans=currentScans.filter(x=>x.id!==${s.id});renderStagedScansList();" class="text-rose-500 cursor-pointer p-1"><i class="fa-solid fa-trash-can"></i></button>
             </div>
           </div>
-          <div id="ocrProgScan_${s.id}" style="display:none;" class="text-[9px] text-indigo-600 mt-1 text-center font-bold"><i class="fa-solid fa-spinner fa-spin"></i> Extracting text...</div>
+          <div id="ocrProgScan_${s.id}" style="display:none;" class="text-[9px] text-indigo-600 mt-1 text-center font-bold"><i class="fa-solid fa-spinner fa-spin"></i> Scanning locally...</div>
         </div>
       `).join('');
     }
@@ -696,7 +681,7 @@
       if(!file) return;
       const r = new FileReader();
       r.onload = (ev) => {
-        compressImage(ev.target.result, 800, 0.5, (comp) => {
+        compressImage(ev.target.result, 1000, 0.7, (comp) => {
           quickScanFilesObj = { name: file.name, data: comp };
           document.getElementById('quickScanFileName').innerText = `1 file ready`;
           document.getElementById('quickScanOcrBtn').disabled = false;
@@ -705,15 +690,15 @@
       r.readAsDataURL(file);
     }
 
-    async function runQuickScanGeminiOCR() {
+    async function runQuickScanLocalOCR() {
       if(!quickScanFilesObj) return;
       const prog = document.getElementById('quickScanOcrProgress'); const btn = document.getElementById('quickScanOcrBtn');
       prog.style.display = 'block'; btn.disabled = true;
       try {
-        const res = await callGeminiAI(quickScanFilesObj.data);
+        const res = await callLocalTesseract(quickScanFilesObj.data);
         const desc = document.getElementById('quickScanDesc');
         desc.value = desc.value ? `${desc.value} | ${res}` : res;
-      } catch(e) { alert("AI Read Failed: " + e.message); }
+      } catch(e) { alert("Local OCR Failed: " + e.message); }
       prog.style.display = 'none'; btn.disabled = false;
     }
 
@@ -734,7 +719,7 @@
       if (!f) return;
       const r = new FileReader();
       r.onload = (ev) => {
-        compressImage(ev.target.result, 800, 0.5, (comp) => {
+        compressImage(ev.target.result, 1000, 0.7, (comp) => {
           tempOpinionPhoto = { name: f.name, data: comp };
           document.getElementById('tempOpinionPhotoName').innerText = f.name;
           document.getElementById('ocrOpinionBtn').disabled = false;
@@ -755,14 +740,14 @@
       const gal = document.getElementById('mainOpGallery'); if (gal) gal.value = '';
     }
 
-    async function runOpinionGeminiOCR() {
+    async function runOpinionLocalOCR() {
       if (!tempOpinionPhoto) return;
       document.getElementById('opinionOcrProgress').style.display = 'block'; document.getElementById('ocrOpinionBtn').disabled = true;
       try {
-        const r = await callGeminiAI(tempOpinionPhoto.data);
+        const r = await callLocalTesseract(tempOpinionPhoto.data);
         const ab = document.getElementById('opinionAdvice');
         ab.value = ab.value ? `${ab.value}\n\n${r}` : r;
-      } catch(e) { alert("AI Read Failed: " + e.message); }
+      } catch(e) { alert("Local OCR Failed: " + e.message); }
       document.getElementById('opinionOcrProgress').style.display = 'none'; document.getElementById('ocrOpinionBtn').disabled = false;
     }
 
@@ -786,7 +771,7 @@
             </div>
             <button type="button" onclick="runOCRForExistingOpinion(${i})" class="text-[10px] bg-purple-100 text-purple-800 px-2 py-1 rounded font-bold cursor-pointer"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Read</button>
           </div>
-          <div id="ocrProgOp_${i}" style="display:none;" class="text-[9px] text-purple-600 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin"></i> Transcribing...</div>
+          <div id="ocrProgOp_${i}" style="display:none;" class="text-[9px] text-purple-600 font-bold text-center mt-1"><i class="fa-solid fa-spinner fa-spin"></i> Scanning...</div>
         ` : '';
         return `<div class="bg-white border rounded p-2 text-xs"><div class="flex justify-between font-bold border-b pb-1 mb-1"><span>${o.dept} (${o.reason})</span><button type="button" onclick="removeOpinionFromTempList(${i})" class="text-rose-500"><i class="fa-solid fa-trash-can"></i></button></div><div class="whitespace-pre-line">${o.advice}</div>${pb}</div>`;
       }).join('');
@@ -808,18 +793,18 @@
       const f = e.target.files[0];
       if(!f) return;
       const r = new FileReader();
-      r.onload = (ev) => { compressImage(ev.target.result, 800, 0.5, (comp) => { quickOpinionPhotoObj = { name: f.name, data: comp }; document.getElementById('quickOpOcrBtn').disabled = false; }); };
+      r.onload = (ev) => { compressImage(ev.target.result, 1000, 0.7, (comp) => { quickOpinionPhotoObj = { name: f.name, data: comp }; document.getElementById('quickOpOcrBtn').disabled = false; }); };
       r.readAsDataURL(f);
     }
 
-    async function runQuickOpinionGeminiOCR() {
+    async function runQuickOpinionLocalOCR() {
       if(!quickOpinionPhotoObj) return;
       document.getElementById('quickOpOcrProgress').style.display = 'block'; document.getElementById('quickOpOcrBtn').disabled = true;
       try {
-        const r = await callGeminiAI(quickOpinionPhotoObj.data);
+        const r = await callLocalTesseract(quickOpinionPhotoObj.data);
         const a = document.getElementById('quickOpAdvice');
         a.value = a.value ? `${a.value}\n\n${r}` : r;
-      } catch(e) { alert("AI Read Failed: " + e.message); }
+      } catch(e) { alert("Local OCR Failed: " + e.message); }
       document.getElementById('quickOpOcrProgress').style.display = 'none'; document.getElementById('quickOpOcrBtn').disabled = false;
     }
 
@@ -997,6 +982,22 @@
         let n = p.name; if (!n || n === 'undefined' || n === 'null') n = p.patientName || 'Unknown';
         return`<tr class="border-b"><td class="p-2">${p.admissionDate}</td><td class="p-2">${p.hospitalNo||'-'}</td><td class="p-2">${n}</td><td class="p-2">${p.category}</td><td class="p-2">${p.diagnosis}</td></tr>`
       }).join(''); 
+    }
+
+    function exportMonthlyDataToCSV() {
+      const sm = document.getElementById('selectedMonth').value || currentMonthStr;
+      const mp = patients.filter(p => p.admissionDate && p.admissionDate.startsWith(sm));
+      let csv = "DOA,MRD / IP,Name,Ward,Diagnosis,Status\n";
+      mp.forEach(p => {
+        let n = p.name || p.patientName || 'Unknown';
+        csv += `"${p.admissionDate}","${p.hospitalNo || '-'}","${n}","${p.category}","${p.diagnosis || ''}","${p.category}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `Surgix_Census_${sm}.csv`);
+      a.click();
     }
 
     function processBulkVitalsBatch() { const r=document.getElementById('rawVitalsInput').value.split(/\n\s*\n/); r.forEach(b=>{ const ls=b.split('\n').map(l=>l.trim()).filter(l=>l); if(!ls.length)return; let bp='',pr=''; for(let i=1;i<ls.length;i++){ if(ls[i].includes('/'))bp=ls[i]; else if(/^\d+$/.test(ls[i]))pr=ls[i]; } const p=patients.find(x=>{ let n = x.name; if(!n||n==='undefined') n=x.patientName||''; return n.toLowerCase().includes(ls[0].toLowerCase()); }); if(p)p.vitals=`BP: ${bp} mmHg\nPR: ${pr} bpm`; }); saveToStorage(); updateUI(); closeBulkVitalsModal(); }
