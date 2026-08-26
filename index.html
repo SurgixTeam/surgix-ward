@@ -80,15 +80,17 @@
           <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-filter text-teal-600"></i> Ward Filter:</span>
           <div id="wardSubTabsContainer" class="flex flex-wrap gap-1 text-xs"></div>
         </div>
-        
-        <!-- Sub-Header Quick Action Box -->
-        <div class="p-3 bg-teal-50/50 border border-teal-100 rounded-xl space-y-2">
-          <div class="text-[11px] font-bold text-teal-900 uppercase tracking-wide flex items-center gap-1"><i class="fa-solid fa-bolt text-amber-500"></i> Quick Actions (Applies to Highlighted Patient)</div>
+
+        <!-- WARD BULK UPDATE PANEL -->
+        <div class="p-3 bg-slate-100/70 border border-slate-200 rounded-xl space-y-2">
+          <div class="text-[11px] font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1">
+            <i class="fa-solid fa-list-check text-teal-600"></i> Ward Bulk Update (All Patients in Active Filter)
+          </div>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <button type="button" onclick="openQuickVitalsModal()" class="bg-white hover:bg-teal-50 border border-teal-200 text-teal-900 text-xs font-semibold py-2 px-3 rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-heart-pulse text-rose-500"></i> Vitals</button>
-            <button type="button" onclick="openQuickCBGModal()" class="bg-white hover:bg-teal-50 border border-teal-200 text-teal-900 text-xs font-semibold py-2 px-3 rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-droplet text-blue-500"></i> CBG/Insulin</button>
-            <button type="button" onclick="openQuickDrainsModal()" class="bg-white hover:bg-teal-50 border border-teal-200 text-teal-900 text-xs font-semibold py-2 px-3 rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-faucet-drip text-teal-600"></i> Drains</button>
-            <button type="button" onclick="openQuickIOModal()" class="bg-white hover:bg-teal-50 border border-teal-200 text-teal-900 text-xs font-semibold py-2 px-3 rounded-lg shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-scale-balanced text-indigo-500"></i> I/O Balance</button>
+            <button type="button" onclick="openBulkModal('vitals')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold py-2 px-2 rounded-lg shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-heart-pulse text-[11px]"></i> Bulk Vitals</button>
+            <button type="button" onclick="openBulkModal('cbg')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold py-2 px-2 rounded-lg shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-droplet text-[11px]"></i> Bulk CBG</button>
+            <button type="button" onclick="openBulkModal('drains')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold py-2 px-2 rounded-lg shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-faucet-drip text-[11px]"></i> Bulk Drains</button>
+            <button type="button" onclick="openBulkModal('io')" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold py-2 px-2 rounded-lg shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"><i class="fa-solid fa-scale-balanced text-[11px]"></i> Bulk I/O</button>
           </div>
         </div>
 
@@ -203,65 +205,20 @@
     </div>
   </div>
 
-  <!-- QUICK MODALS -->
-  <!-- Vitals Modal -->
-  <div id="mQuickVitals" class="modal p-3 sm:p-4">
-    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
-      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="vitalsModalTitle" class="text-sm font-bold">🩺 Update Vitals</h3>
+  <!-- BULK UPDATE MODAL -->
+  <div id="mBulk" class="modal p-3 sm:p-4">
+    <div class="relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh]">
+      <div class="flex items-center justify-between p-4 bg-teal-900 text-white">
+        <h3 id="bulkModalTitle" class="text-sm font-bold">📋 Ward Bulk Update</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="block font-semibold mb-1">BP (mmHg)</label><input type="text" id="vBP" placeholder="120/80" class="w-full border border-slate-300 rounded p-2" /></div>
-          <div><label class="block font-semibold mb-1">PR (bpm)</label><input type="text" id="vPR" placeholder="72" class="w-full border border-slate-300 rounded p-2" /></div>
-        </div>
-        <button type="button" onclick="saveQuickVitals()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Vitals</button>
+      <div class="p-4 space-y-3 text-xs overflow-y-auto flex-1">
+        <p class="text-slate-500 font-medium">Update values for patients currently visible in the active ward filter (<span id="bulkWardName">All</span>):</p>
+        <div id="bulkRowsContainer" class="space-y-3 divide-y divide-slate-100"></div>
       </div>
-    </div>
-  </div>
-
-  <!-- CBG Modal -->
-  <div id="mQuickCBG" class="modal p-3 sm:p-4">
-    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
-      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="cbgModalTitle" class="text-sm font-bold">💉 CBG & Insulin Orders</h3>
-        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-4 space-y-3 text-xs">
-        <div><label class="block font-semibold mb-1">CBG (mg/dL)</label><input type="text" id="cbVal" class="w-full border border-slate-300 rounded p-2" /></div>
-        <div><label class="block font-semibold mb-1">Context / Insulin Order</label><input type="text" id="cbType" class="w-full border border-slate-300 rounded p-2" /></div>
-        <button type="button" onclick="saveSubCBG()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer">Save CBG / Insulin</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Drains Modal -->
-  <div id="mQuickDrains" class="modal p-3 sm:p-4">
-    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
-      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="drainsModalTitle" class="text-sm font-bold">🧪 Drains (RT / DT / JP)</h3>
-        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-4 space-y-3 text-xs">
-        <div><label class="block font-semibold mb-1">Ryle's Tube (RT)</label><input type="text" id="subRT" class="w-full border border-slate-300 rounded p-2" /></div>
-        <div><label class="block font-semibold mb-1">Drain Tube (DT)</label><input type="text" id="subDT" class="w-full border border-slate-300 rounded p-2" /></div>
-        <div><label class="block font-semibold mb-1">Jackson-Pratt (JP)</label><input type="text" id="subJP" class="w-full border border-slate-300 rounded p-2" /></div>
-        <button type="button" onclick="saveSubDrains()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer">Save Drains</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- I/O Balance Modal -->
-  <div id="mQuickIO" class="modal p-3 sm:p-4">
-    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
-      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="ioModalTitle" class="text-sm font-bold">💧 Fluid I/O Balance</h3>
-        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-4 space-y-3 text-xs">
-        <div><label class="block font-semibold mb-1">I/O Balance</label><input type="text" id="subIO" class="w-full border border-slate-300 rounded p-2" /></div>
-        <button type="button" onclick="saveSubIO()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer">Save I/O Balance</button>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold rounded-lg cursor-pointer">Cancel</button>
+        <button type="button" onclick="saveBulkUpdates()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg cursor-pointer">Save All Updates</button>
       </div>
     </div>
   </div>
@@ -340,7 +297,7 @@
     </div>
   </div>
 
-  <!-- Opinion Modal (Dedicated per patient button with Departments) -->
+  <!-- Opinion Modal -->
   <div id="mOpinion" class="modal p-3 sm:p-4">
     <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-purple-900 text-white">
@@ -351,9 +308,7 @@
         <input type="hidden" id="opinionPatientId">
         <div>
           <label class="block font-semibold mb-1">Department *</label>
-          <select id="opDeptSelect" onchange="handleOpinionDeptChange(this.value)" class="w-full border border-slate-300 rounded p-2 bg-white font-medium">
-            <!-- Options populated dynamically -->
-          </select>
+          <select id="opDeptSelect" onchange="handleOpinionDeptChange(this.value)" class="w-full border border-slate-300 rounded p-2 bg-white font-medium"></select>
         </div>
         <div>
           <label class="block font-semibold mb-1">Opinion i/v/o (In view of / Indication)</label>
@@ -364,7 +319,6 @@
           <textarea id="opAdvice" rows="3" placeholder="Specialist recommendations and medications..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <button type="button" onclick="saveOpinion()" class="w-full bg-purple-700 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Opinion</button>
-        
         <div id="opinionListContainer" class="mt-4 space-y-2 border-t pt-3"></div>
       </div>
     </div>
@@ -387,6 +341,7 @@
     let isFirebaseReady = false;
     let patients = [];
     let customDepts = JSON.parse(localStorage.getItem('surgix_custom_depts') || '[]');
+    let currentBulkType = '';
 
     try {
       if (typeof firebase !== 'undefined') {
@@ -411,7 +366,6 @@
     let currentMainTab = 'patients';
     let currentSelectedWardFilter = 'ALL';
     let activeId = null;
-    let targetId = null;
     let currentProcedures = [];
     let currentAntibiotics = [];
 
@@ -427,7 +381,6 @@
       return pts;
     }
 
-    // HELPER: Calculates Days for VAC/Antibiotics
     function calcAbxDay(d) {
       if (!d) return null;
       const [y, m, day] = d.split('-').map(Number);
@@ -443,19 +396,52 @@
         const loc = JSON.parse(localStorage.getItem('surgix_ward_db_v8') || '[]');
         if (Array.isArray(loc) && loc.length > 0) { 
           patients = scrubUndefinedNames(loc); 
-          if (!activeId && patients.length) activeId = patients[0].id;
-          updateUI(); 
+        } else {
+          patients = [{
+            id: Date.now(),
+            ward: "SICU",
+            name: "Sample Patient (Test)",
+            age: "52",
+            sex: "M",
+            hosp: "MRD-9988",
+            adm: "IP-1122",
+            admissionDate: getLocalDateISO(),
+            diag: "Carcinoma Stomach s/p Subtotal Gastrectomy",
+            plan: "Monitor vitals and abdominal drains",
+            surgeries: [{ id: 1, name: "Subtotal Gastrectomy", date: getLocalDateISO() }],
+            antibiotics: [{ id: 1, name: "Inj Pipzo 4.5g", date: getLocalDateISO() }],
+            bp: "120/80",
+            pr: "78",
+            cbg: "125",
+            cbgType: "6 units Regular Insulin",
+            rt: "50cc bilious",
+            dt: "20cc serosanguinous",
+            jp: "",
+            io: "Net +200ml",
+            complaints: "Pain over surgical site",
+            bladder: "Self voided",
+            bowel: "passed stools",
+            oe: "Conscious, oriented, afebrile",
+            pa: "Soft, non tender, BS+",
+            le: "Wound Healthy,Sutures intact, no active discharge or bleeding",
+            opinions: []
+          }];
         }
       } catch (e) {}
+
+      if (!activeId && patients.length) activeId = patients[0].id;
+      updateUI();
 
       if (isFirebaseReady && db) {
         db.ref('patients').on('value', (snap) => {
           const val = snap.val();
-          let rawData = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
-          patients = scrubUndefinedNames(rawData);
-          localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
-          if (!activeId && patients.length) activeId = patients[0].id;
-          updateUI();
+          if (val) {
+            let rawData = Array.isArray(val) ? val : Object.values(val);
+            patients = scrubUndefinedNames(rawData);
+            localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
+            if (!activeId && patients.length) activeId = patients[0].id;
+            updateUI();
+          }
           const badge = document.getElementById('syncBadge');
           if(badge) {
             badge.className = 'bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200 flex items-center gap-1';
@@ -471,7 +457,6 @@
       } else {
         const badge = document.getElementById('syncBadge');
         if(badge) badge.innerText = 'LOCAL ONLY';
-        updateUI();
       }
     });
 
@@ -498,9 +483,7 @@
         <option value="ANAESTHESIA">ANAESTHESIA</option>
         <option value="NEPHROLOGY">NEPHROLOGY</option>
       `;
-      customDepts.forEach(d => {
-        html += `<option value="${d}">${d}</option>`;
-      });
+      customDepts.forEach(d => { html += `<option value="${d}">${d}</option>`; });
       html += `<option value="__ADD_OTHER__">➕ Add Other Department...</option>`;
       sel.innerHTML = html;
     }
@@ -556,97 +539,70 @@
       document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
     }
 
-    // --- SUB-HEADER QUICK ACTIONS ---
-    function openQuickVitalsModal() {
-      const p = getActivePatient();
-      if (!p) return alert("Select a patient first by clicking their card.");
-      targetId = String(p.id);
-      document.getElementById('vitalsModalTitle').innerText = `🩺 Vitals: ${p.name}`;
-      document.getElementById('vBP').value = p.bp || '';
-      document.getElementById('vPR').value = p.pr || '';
-      document.getElementById('mQuickVitals').classList.add('active');
-    }
-    async function saveQuickVitals() {
-      if (!targetId) return;
-      const p = patients.find(x => String(x.id) === targetId);
-      if(p) {
-        p.bp = document.getElementById('vBP').value.trim();
-        p.pr = document.getElementById('vPR').value.trim();
-        saveToStorage(); updateUI(); closeModals();
-      }
-    }
+    // --- BULK UPDATE LOGIC ---
+    function openBulkModal(type) {
+      currentBulkType = type;
+      const act = patients.filter(p => p.ward !== 'Discharged');
+      const list = currentSelectedWardFilter === 'ALL' ? act : act.filter(p => p.ward === currentSelectedWardFilter);
+      if (!list.length) return alert("No active patients found in this filter.");
 
-    function openQuickCBGModal() {
-      const p = getActivePatient();
-      if (!p) return alert("Select a patient first by clicking their card.");
-      targetId = String(p.id);
-      document.getElementById('cbVal').value = p.cbg || '';
-      document.getElementById('cbType').value = p.cbgType || '';
-      document.getElementById('mQuickCBG').classList.add('active');
-    }
-    async function saveSubCBG() {
-      if (!targetId) return;
-      const p = patients.find(x => String(x.id) === targetId);
-      if(p) {
-        p.cbg = document.getElementById('cbVal').value.trim();
-        p.cbgType = document.getElementById('cbType').value.trim();
-        saveToStorage(); updateUI(); closeModals();
-      }
-    }
+      document.getElementById('bulkWardName').innerText = currentSelectedWardFilter;
+      const titleMap = { vitals: '🩺 Bulk Update Vitals', cbg: '💉 Bulk Update CBG & Insulin', drains: '🧪 Bulk Update Drains', io: '💧 Bulk Update Fluid I/O' };
+      document.getElementById('bulkModalTitle').innerText = titleMap[type] || 'Bulk Update';
 
-    function openQuickDrainsModal() {
-      const p = getActivePatient();
-      if (!p) return alert("Select a patient first by clicking their card.");
-      targetId = String(p.id);
-      document.getElementById('subRT').value = p.rt || '';
-      document.getElementById('subDT').value = p.dt || '';
-      document.getElementById('subJP').value = p.jp || '';
-      document.getElementById('mQuickDrains').classList.add('active');
-    }
-    async function saveSubDrains() {
-      if (!targetId) return;
-      const p = patients.find(x => String(x.id) === targetId);
-      if(p) {
-        p.rt = document.getElementById('subRT').value.trim();
-        p.dt = document.getElementById('subDT').value.trim();
-        p.jp = document.getElementById('subJP').value.trim();
-        saveToStorage(); updateUI(); closeModals();
-      }
-    }
-
-    function openQuickIOModal() {
-      const p = getActivePatient();
-      if (!p) return alert("Select a patient first by clicking their card.");
-      targetId = String(p.id);
-      document.getElementById('subIO').value = p.io || '';
-      document.getElementById('mQuickIO').classList.add('active');
-    }
-    async function saveSubIO() {
-      if (!targetId) return;
-      const p = patients.find(x => String(x.id) === targetId);
-      if(p) {
-        p.io = document.getElementById('subIO').value.trim();
-        saveToStorage(); updateUI(); closeModals();
-      }
-    }
-
-    function getActivePatient() {
-      if (!activeId) return null;
-      return patients.find(p => String(p.id) === String(activeId));
-    }
-
-    // --- EXAMINATION MODAL ---
-    function toggleVacDateInput() {
-      const chk = document.getElementById('chkVac').checked;
-      const wrap = document.getElementById('vacDateWrap');
-      if (chk) {
-        wrap.classList.remove('hidden');
-        if (!document.getElementById('vacStartDate').value) {
-          document.getElementById('vacStartDate').value = getLocalDateISO();
+      const container = document.getElementById('bulkRowsContainer');
+      container.innerHTML = list.map((p, idx) => {
+        let fieldsHtml = '';
+        if (type === 'vitals') {
+          fieldsHtml = `
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" data-pid="${p.id}" data-field="bp" placeholder="BP (e.g. 120/80)" value="${p.bp || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="pr" placeholder="PR (e.g. 72)" value="${p.pr || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+            </div>`;
+        } else if (type === 'cbg') {
+          fieldsHtml = `
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" data-pid="${p.id}" data-field="cbg" placeholder="CBG (mg/dL)" value="${p.cbg || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="cbgType" placeholder="Insulin/Context" value="${p.cbgType || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+            </div>`;
+        } else if (type === 'drains') {
+          fieldsHtml = `
+            <div class="grid grid-cols-3 gap-1.5">
+              <input type="text" data-pid="${p.id}" data-field="rt" placeholder="RT" value="${p.rt || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="dt" placeholder="DT" value="${p.dt || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="jp" placeholder="JP" value="${p.jp || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+            </div>`;
+        } else if (type === 'io') {
+          fieldsHtml = `
+            <input type="text" data-pid="${p.id}" data-field="io" placeholder="I/O Balance" value="${p.io || ''}" class="w-full border border-slate-300 rounded p-1.5 bg-white">`;
         }
-      } else {
-        wrap.classList.add('hidden');
-      }
+
+        return `
+          <div class="pt-2 pb-2 space-y-1">
+            <div class="font-bold text-slate-900">${idx + 1}. ${p.name} <span class="text-[10px] text-slate-500 font-normal">[${p.ward}]</span></div>
+            ${fieldsHtml}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('mBulk').classList.add('active');
+    }
+
+    async function saveBulkUpdates() {
+      const container = document.getElementById('bulkRowsContainer');
+      const inputs = container.querySelectorAll('input[data-pid]');
+      inputs.forEach(input => {
+        const pid = input.getAttribute('data-pid');
+        const field = input.getAttribute('data-field');
+        const val = input.value.trim();
+        const p = patients.find(x => String(x.id) === String(pid));
+        if (p) {
+          p[field] = val;
+        }
+      });
+      saveToStorage();
+      updateUI();
+      closeModals();
     }
 
     function openExamModal(id) {
@@ -654,12 +610,12 @@
       if(!p) return;
       document.getElementById('examPatientId').value = p.id;
       document.getElementById('examModalTitle').innerText = `📋 Examination: ${p.name}`;
-      document.getElementById('eComp').value = p.complaints || '';
-      document.getElementById('eBladder').value = p.bladder || '';
-      document.getElementById('eBowel').value = p.bowel || '';
-      document.getElementById('eOE').value = p.oe || '';
-      document.getElementById('ePA').value = p.pa || '';
-      document.getElementById('eLE').value = p.le || '';
+      document.getElementById('eComp').value = p.complaints || 'Pain over surgical site';
+      document.getElementById('eBladder').value = p.bladder || 'Self voided';
+      document.getElementById('eBowel').value = p.bowel || 'passed stools';
+      document.getElementById('eOE').value = p.oe || 'Conscious, oriented, afebrile';
+      document.getElementById('ePA').value = p.pa || 'Soft, non tender, BS+';
+      document.getElementById('eLE').value = p.le || 'Wound Healthy,Sutures intact, no active discharge or bleeding';
 
       document.getElementById('chkAnalPack').checked = !!p.analPack;
       document.getElementById('chkScrotal').checked = !!p.scrotalSupport;
@@ -671,9 +627,20 @@
         document.getElementById('vacStartDate').value = getLocalDateISO();
         document.getElementById('vacDateWrap').classList.add('hidden');
       }
-
       document.getElementById('mExam').classList.add('active');
     }
+
+    function toggleVacDateInput() {
+      const chk = document.getElementById('chkVac').checked;
+      const wrap = document.getElementById('vacDateWrap');
+      if (chk) {
+        wrap.classList.remove('hidden');
+        if (!document.getElementById('vacStartDate').value) document.getElementById('vacStartDate').value = getLocalDateISO();
+      } else {
+        wrap.classList.add('hidden');
+      }
+    }
+
     async function saveExam() {
       const id = document.getElementById('examPatientId').value;
       const p = patients.find(x => String(x.id) === String(id));
@@ -684,17 +651,14 @@
         p.oe = document.getElementById('eOE').value.trim();
         p.pa = document.getElementById('ePA').value.trim();
         p.le = document.getElementById('eLE').value.trim();
-
         p.analPack = document.getElementById('chkAnalPack').checked;
         p.scrotalSupport = document.getElementById('chkScrotal').checked;
         p.vacActive = document.getElementById('chkVac').checked;
         p.vacDate = p.vacActive ? (document.getElementById('vacStartDate').value || getLocalDateISO()) : '';
-
         saveToStorage(); updateUI(); closeModals();
       }
     }
 
-    // --- LABS & SCANS MODAL ---
     function openLabsModal(id) {
       const p = patients.find(x => String(x.id) === String(id));
       if(!p) return;
@@ -705,6 +669,7 @@
       document.getElementById('subImaging').value = p.imaging || '';
       document.getElementById('mLabs').classList.add('active');
     }
+
     async function saveSubLabs() {
       const id = document.getElementById('labsPatientId').value;
       const p = patients.find(x => String(x.id) === String(id));
@@ -716,7 +681,6 @@
       }
     }
 
-    // --- OPINION MODAL ---
     function openOpinionModal(id) {
       const p = patients.find(x => String(x.id) === String(id));
       if(!p) return;
@@ -759,19 +723,15 @@
         const reason = document.getElementById('opReason').value.trim();
         const advice = document.getElementById('opAdvice').value.trim();
         if(!advice) { alert("Please enter advice notes."); return; }
-
         if(!p.opinions) p.opinions = [];
         p.opinions.push({ dept, reason: reason || 'Evaluation', advice });
         saveToStorage(); updateUI(); renderOpinionList(p);
-        
         document.getElementById('opReason').value = '';
         document.getElementById('opAdvice').value = '';
-
         closeModals();
       }
     }
 
-    // --- ADMISSION / EDIT MODAL ---
     function openPatientModal(id=null) {
       currentProcedures = [];
       currentAntibiotics = [];
@@ -801,7 +761,6 @@
     }
     function closePatientModal() { document.getElementById('patientModal').classList.remove('active'); }
 
-    // PROCEDURES LIST
     function setTempProcToday() { document.getElementById('tempProcDate').value = getLocalDateISO(); }
     function addProcedureToTempList() {
       const n = document.getElementById('tempProcName').value.trim();
@@ -823,7 +782,6 @@
       }).join('');
     }
 
-    // ANTIBIOTICS LIST
     function setTempAbxToday() { document.getElementById('tempAbxDate').value = getLocalDateISO(); }
     function addAbxToTempList() {
       const n = document.getElementById('tempAbxName').value.trim();
@@ -866,29 +824,36 @@
         antibiotics: [...currentAntibiotics],
         updatedAt: Date.now()
       };
-
       if (w !== 'Discharged') data.dischargeDate = '';
 
       if(id) {
         const ix = patients.findIndex(x => String(x.id) === String(id));
         if(ix !== -1) patients[ix] = { ...patients[ix], ...data };
       } else {
-        Object.assign(data, { createdAt: Date.now(), complaints: '', bladder: '', bowel: '', bp: '', pr: '', cbg: '', cbgType: '', rt: '', dt: '', jp: '', io: '', oe: '', pa: '', le: '', analPack: false, scrotalSupport: false, vacActive: false, vacDate: '', diet: '', dietSp: '', otherOrd: '', labsSummary: '', culture: '', imaging: '', opinions: [], dischargeDate: '' });
+        Object.assign(data, { 
+          createdAt: Date.now(), 
+          complaints: 'Pain over surgical site', 
+          bladder: 'Self voided', 
+          bowel: 'passed stools', 
+          bp: '', pr: '', cbg: '', cbgType: '', rt: '', dt: '', jp: '', io: '', 
+          oe: 'Conscious, oriented, afebrile', 
+          pa: 'Soft, non tender, BS+', 
+          le: 'Wound Healthy,Sutures intact, no active discharge or bleeding', 
+          analPack: false, scrotalSupport: false, vacActive: false, vacDate: '', 
+          diet: '', dietSp: '', otherOrd: '', labsSummary: '', culture: '', imaging: '', opinions: [], dischargeDate: '' 
+        });
         patients.push(data);
         activeId = data.id;
       }
-      saveToStorage();
-      closePatientModal();
-      updateUI();
+      saveToStorage(); closePatientModal(); updateUI();
     }
 
     function dischargePatient(id) {
       const p = patients.find(x => String(x.id) === String(id));
-      if(p && confirm("Discharge this patient? They will appear in today's handover message, then automatically hide tomorrow.")) {
+      if(p && confirm("Discharge this patient?")) {
         p.ward = 'Discharged';
         p.dischargeDate = getLocalDateISO();
-        saveToStorage();
-        updateUI();
+        saveToStorage(); updateUI();
       }
     }
 
@@ -896,18 +861,14 @@
       if(confirm("Permanently delete this patient record?")) {
         patients = patients.filter(x => String(x.id) !== String(id));
         if(String(activeId) === String(id)) activeId = patients.length ? patients[0].id : null;
-        saveToStorage();
-        updateUI();
+        saveToStorage(); updateUI();
       }
     }
 
     function clearEntireDatabase() {
-      const c = prompt("⚠️ WARNING: This will permanently delete ALL patients from the database.\n\nType CLEAR to confirm:");
+      const c = prompt("⚠️ WARNING: This will permanently delete ALL patients.\n\nType CLEAR to confirm:");
       if (c === "CLEAR") {
-        patients = [];
-        activeId = null;
-        saveToStorage();
-        updateUI();
+        patients = []; activeId = null; saveToStorage(); updateUI();
         alert("Database wiped clean.");
       }
     }
@@ -934,9 +895,7 @@
       const a = document.createElement('a');
       a.href = url;
       a.download = `Surgical_Census_${getLocalDateISO()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     }
 
@@ -999,11 +958,10 @@
       }).join('');
     }
 
-    // --- HANDOVER FORMATTING LOGIC ---
     function formatBowelBladder(bladder, bowel) {
       const blad = (bladder || '').trim(); const bow = (bowel || '').trim();
       if (!blad && !bow) return '';
-      if (/self voided/i.test(blad) && /passed stools/i.test(bow)) return "Normal Bowel and Bladder Habits";
+      if (/self voided/i.test(blad) && /passed stools/i.test(bow)) return "Normal bowel and bladder habits";
       return [blad, bow].filter(Boolean).join('/');
     }
 
@@ -1035,7 +993,6 @@
       }
       if (p.dt) vit.push(`DT: ${p.dt}`);
       if (p.io) vit.push(`I/O: ${p.io}`);
-      
       if (vit.length) {
         lines.push(`Vitals:`);
         lines.push(...vit);
@@ -1044,13 +1001,12 @@
       if (p.oe) lines.push(`O/E: ${p.oe}`);
       if (p.pa) lines.push(`P/A: ${p.pa}`);
 
-      // L/E construction with special checks
       let leParts = [];
       if (p.le) leParts.push(p.le);
       if (p.analPack) leParts.push("Anal Pack Insitu");
       if (p.scrotalSupport) leParts.push("Scrotal Support Insitu");
       if (p.vacActive) {
-        const vacDays = calcAbxDay(p.vacDate); // D1, D2, etc.
+        const vacDays = calcAbxDay(p.vacDate);
         leParts.push(`VAC Insitu and Functional (D${vacDays})`);
       }
       if (leParts.length) {
@@ -1064,7 +1020,6 @@
       if (abxs.length) {
         abxs.forEach(a => { if (a.name) { const d = calcAbxDay(a.date); on.push(`${a.name} ${d!==null?`(D${d})`:''}`.trim()); } });
       }
-      
       if (p.otherOrd) { const o = p.otherOrd.split('\n').map(l=>l.trim()).filter(Boolean); on.push(...o); }
       if (on.length) {
         lines.push(`On`);
