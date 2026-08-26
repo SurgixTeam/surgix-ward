@@ -203,12 +203,6 @@
           <div><label class="block font-semibold mb-1">BP (mmHg)</label><input type="text" id="vBP" placeholder="120/80" class="w-full border border-slate-300 rounded p-2" /></div>
           <div><label class="block font-semibold mb-1">PR (bpm)</label><input type="text" id="vPR" placeholder="72" class="w-full border border-slate-300 rounded p-2" /></div>
         </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="block font-semibold mb-1">CBG (mg/dL)</label><input type="text" id="vCBG" placeholder="110" class="w-full border border-slate-300 rounded p-2" /></div>
-          <div><label class="block font-semibold mb-1">CBG Context</label><input type="text" id="vCBGType" placeholder="NPO / OHA" class="w-full border border-slate-300 rounded p-2" /></div>
-        </div>
-        <div><label class="block font-semibold mb-1">Drain Tube (DT)</label><input type="text" id="vDT" placeholder="50 ml serosanguinous" class="w-full border border-slate-300 rounded p-2" /></div>
-        <div><label class="block font-semibold mb-1">I/O Balance</label><input type="text" id="vIO" placeholder="1000/500 ml" class="w-full border border-slate-300 rounded p-2" /></div>
         <button type="button" onclick="saveQuickVitals()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Vitals</button>
       </div>
     </div>
@@ -261,7 +255,7 @@
 
   <!-- Examination Modal -->
   <div id="mExam" class="modal p-3 sm:p-4">
-    <div class="relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
         <h3 id="examModalTitle" class="text-sm font-bold">📋 Patient Examination & Status</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -345,19 +339,7 @@
         <div>
           <label class="block font-semibold mb-1">Department *</label>
           <select id="opDeptSelect" onchange="handleOpinionDeptChange(this.value)" class="w-full border border-slate-300 rounded p-2 bg-white font-medium">
-            <option value="ENT">ENT</option>
-            <option value="OPHTHALMOLOGY">OPHTHALMOLOGY</option>
-            <option value="GM">GM (General Medicine)</option>
-            <option value="OBG">OBG</option>
-            <option value="PAEDIATRICS">PAEDIATRICS</option>
-            <option value="MEDICAL GASTROENTEROLOGY">MEDICAL GASTROENTEROLOGY</option>
-            <option value="NEUROLOGY">NEUROLOGY</option>
-            <option value="UROLOGY">UROLOGY</option>
-            <option value="SURGICAL NEUROLOGY">SURGICAL NEUROLOGY</option>
-            <option value="PLASTIC SURGERY">PLASTIC SURGERY</option>
-            <option value="ANAESTHESIA">ANAESTHESIA</option>
-            <option value="NEPHROLOGY">NEPHROLOGY</option>
-            <option value="__ADD_OTHER__">➕ Add Other Department...</option>
+            <!-- Options populated dynamically -->
           </select>
         </div>
         <div>
@@ -369,6 +351,8 @@
           <textarea id="opAdvice" rows="3" placeholder="Specialist recommendations and medications..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <button type="button" onclick="saveOpinion()" class="w-full bg-purple-700 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Opinion</button>
+        
+        <div id="opinionListContainer" class="mt-4 space-y-2 border-t pt-3"></div>
       </div>
     </div>
   </div>
@@ -443,7 +427,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       populateDeptDropdown();
       try {
-        const loc = JSON.parse(localStorage.getItem('surgix_ward_db_v7') || '[]');
+        const loc = JSON.parse(localStorage.getItem('surgix_ward_db_v8') || '[]');
         if (Array.isArray(loc) && loc.length > 0) { 
           patients = scrubUndefinedNames(loc); 
           if (!activeId && patients.length) activeId = patients[0].id;
@@ -456,7 +440,7 @@
           const val = snap.val();
           let rawData = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
           patients = scrubUndefinedNames(rawData);
-          localStorage.setItem('surgix_ward_db_v7', JSON.stringify(patients));
+          localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
           if (!activeId && patients.length) activeId = patients[0].id;
           updateUI();
           const badge = document.getElementById('syncBadge');
@@ -480,14 +464,13 @@
 
     function saveToStorage() {
       patients = scrubUndefinedNames(patients);
-      localStorage.setItem('surgix_ward_db_v7', JSON.stringify(patients));
+      localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
       if (isFirebaseReady && db) db.ref('patients').set(patients).catch(console.error);
     }
 
     function populateDeptDropdown() {
       const sel = document.getElementById('opDeptSelect');
       if (!sel) return;
-      // Keep static defaults + append custom
       let html = `
         <option value="ENT">ENT</option>
         <option value="OPHTHALMOLOGY">OPHTHALMOLOGY</option>
@@ -516,7 +499,7 @@
           const clean = nd.trim().toUpperCase();
           if (!customDepts.includes(clean)) {
             customDepts.push(clean);
-            localStorage.setItem('surgix_ward_db_v7_depts', JSON.stringify(customDepts));
+            localStorage.setItem('surgix_custom_depts', JSON.stringify(customDepts));
           }
           populateDeptDropdown();
           document.getElementById('opDeptSelect').value = clean;
@@ -576,10 +559,6 @@
       document.getElementById('vitalsModalTitle').innerText = `🩺 Vitals: ${p.name}`;
       document.getElementById('vBP').value = p.bp || '';
       document.getElementById('vPR').value = p.pr || '';
-      document.getElementById('vCBG').value = p.cbg || '';
-      document.getElementById('vCBGType').value = p.cbgType || '';
-      document.getElementById('vDT').value = p.dt || '';
-      document.getElementById('vIO').value = p.io || '';
       document.getElementById('mQuickVitals').classList.add('active');
     }
     async function saveQuickVitals() {
@@ -588,10 +567,6 @@
       if(p) {
         p.bp = document.getElementById('vBP').value.trim();
         p.pr = document.getElementById('vPR').value.trim();
-        p.cbg = document.getElementById('vCBG').value.trim();
-        p.cbgType = document.getElementById('vCBGType').value.trim();
-        p.dt = document.getElementById('vDT').value.trim();
-        p.io = document.getElementById('vIO').value.trim();
         saveToStorage(); updateUI(); closeModals();
       }
     }
@@ -740,8 +715,32 @@
       document.getElementById('opDeptSelect').value = 'ENT';
       document.getElementById('opReason').value = '';
       document.getElementById('opAdvice').value = '';
+      renderOpinionList(p);
       document.getElementById('mOpinion').classList.add('active');
     }
+    
+    function renderOpinionList(p) {
+      const c = document.getElementById('opinionListContainer');
+      if (!p.opinions || !p.opinions.length) { c.innerHTML = ''; return; }
+      c.innerHTML = p.opinions.map((o, idx) => `
+        <div class="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
+          <div class="flex justify-between font-bold border-b border-purple-200 pb-1 mb-1 text-purple-900">
+            <span>${o.dept} i/v/o ${o.reason}</span>
+            <button type="button" onclick="deleteOpinion('${p.id}', ${idx})" class="text-rose-500"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+          <div class="whitespace-pre-wrap">${o.advice}</div>
+        </div>
+      `).join('');
+    }
+    
+    async function deleteOpinion(pid, idx) {
+      const p = patients.find(x => String(x.id) === String(pid));
+      if(p && p.opinions) {
+        p.opinions.splice(idx, 1);
+        saveToStorage(); updateUI(); renderOpinionList(p);
+      }
+    }
+
     async function saveOpinion() {
       const id = document.getElementById('opinionPatientId').value;
       const p = patients.find(x => String(x.id) === String(id));
@@ -753,7 +752,10 @@
 
         if(!p.opinions) p.opinions = [];
         p.opinions.push({ dept, reason: reason || 'Evaluation', advice });
-        saveToStorage(); updateUI(); closeModals();
+        saveToStorage(); updateUI(); renderOpinionList(p);
+        
+        document.getElementById('opReason').value = '';
+        document.getElementById('opAdvice').value = '';
       }
     }
 
@@ -1009,11 +1011,25 @@
       if (p.analPack) leParts.push("Anal Pack Insitu");
       if (p.scrotalSupport) leParts.push("Scrotal Support Insitu");
       if (p.vacActive) {
-        const vacDays = calcAbxDay(p.vacDate); // reuse day calculator
+        const vacDays = calcAbxDay(p.vacDate); // D1, D2, etc.
         leParts.push(`VAC Insitu and Functional (D${vacDays})`);
       }
       if (leParts.length) {
         lines.push(`L/E: ${leParts.join(', ')}`);
+      }
+
+      const on = [];
+      if (p.diet || p.dietSp) on.push(p.diet && p.dietSp ? `${p.diet} (${p.dietSp})` : (p.diet || p.dietSp));
+      
+      const abxs = Array.isArray(p.antibiotics) ? p.antibiotics : [];
+      if (abxs.length) {
+        abxs.forEach(a => { if (a.name) { const d = calcAbxDay(a.date); on.push(`${a.name} ${d!==null?`(D${d})`:''}`.trim()); } });
+      }
+      
+      if (p.otherOrd) { const o = p.otherOrd.split('\n').map(l=>l.trim()).filter(Boolean); on.push(...o); }
+      if (on.length) {
+        lines.push(`On`);
+        lines.push(...on);
       }
 
       if (p.labsSummary) lines.push(`LABS:\n${p.labsSummary}`);
