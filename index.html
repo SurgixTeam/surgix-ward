@@ -205,15 +205,27 @@
     </div>
   </div>
 
-  <!-- BULK UPDATE MODAL -->
+  <!-- BULK UPDATE MODAL WITH WHATSAPP PASTE -->
   <div id="mBulk" class="modal p-3 sm:p-4">
     <div class="relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh]">
       <div class="flex items-center justify-between p-4 bg-teal-900 text-white">
         <h3 id="bulkModalTitle" class="text-sm font-bold">📋 Ward Bulk Update</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
+      
+      <!-- WhatsApp Paste Section -->
+      <div class="p-4 bg-emerald-50/60 border-b border-emerald-100 space-y-2">
+        <label class="block font-bold text-emerald-900 text-xs flex items-center gap-1.5">
+          <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i> Paste WhatsApp Text Block (Name, BP, Pulse) to Auto-Fill
+        </label>
+        <textarea id="whatsappPasteArea" rows="4" placeholder="Paste WhatsApp format here (e.g. Raja \n 130/80 \n 104)..." class="w-full text-xs border border-emerald-300 rounded-lg p-2.5 font-mono focus:outline-none bg-white"></textarea>
+        <button type="button" onclick="parseAndApplyWhatsAppPaste()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm cursor-pointer flex items-center gap-1">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Fill from WhatsApp Text
+        </button>
+      </div>
+
       <div class="p-4 space-y-3 text-xs overflow-y-auto flex-1">
-        <p class="text-slate-500 font-medium">Update values for patients currently visible in the active ward filter (<span id="bulkWardName">All</span>):</p>
+        <p class="text-slate-500 font-medium">Review / edit values for patients currently visible in active filter (<span id="bulkWardName">All</span>):</p>
         <div id="bulkRowsContainer" class="space-y-3 divide-y divide-slate-100"></div>
       </div>
       <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
@@ -232,7 +244,7 @@
       </div>
       <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
         <input type="hidden" id="examPatientId">
-        <div><label class="block font-semibold mb-1">Complaints (C/o)</label><textarea id="eComp" rows="2" placeholder="e.g. pain at the surgical site" class="w-full border border-slate-300 rounded p-2"></textarea></div>
+        <div><label class="block font-semibold mb-1">Complaints (C/o)</label><textarea id="eComp" rows="2" placeholder="e.g. Pain over surgical site" class="w-full border border-slate-300 rounded p-2"></textarea></div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block font-semibold mb-1">Bladder</label>
@@ -265,32 +277,47 @@
           </div>
         </div>
 
-        <div><label class="block font-semibold mb-1">Additional L/E Notes</label><input type="text" id="eLE" placeholder="dressings intact / No soakage" class="w-full border border-slate-300 rounded p-2" /></div>
+        <div><label class="block font-semibold mb-1">Additional L/E Notes</label><input type="text" id="eLE" placeholder="Wound Healthy,Sutures intact, no active discharge or bleeding" class="w-full border border-slate-300 rounded p-2" /></div>
         <button type="button" onclick="saveExam()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Examination</button>
       </div>
     </div>
   </div>
 
-  <!-- Labs & Scans Modal -->
+  <!-- Labs & Scans Modal with Native Multiple OMR Photo Capture -->
   <div id="mLabs" class="modal p-3 sm:p-4">
     <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports</h3>
+        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Multiple OMR)</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
         <input type="hidden" id="labsPatientId">
+
+        <!-- Native OMR / Multiple Photo Capture Section -->
+        <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200 space-y-2">
+          <label class="font-bold text-teal-950 block flex items-center gap-1.5">
+            <i class="fa-solid fa-camera-retro text-teal-600 text-sm"></i> Native OMR / Upload Multiple Report Photos
+          </label>
+          <div class="flex gap-2 items-center">
+            <label class="flex-1 bg-white hover:bg-teal-100 border border-teal-300 text-teal-900 font-semibold py-2 px-3 rounded-lg text-center cursor-pointer shadow-sm flex items-center justify-center gap-2 transition">
+              <i class="fa-solid fa-images text-teal-600"></i> Select Multiple Report Photos
+              <input type="file" accept="image/*" multiple onchange="handleLabPhotoCapture(event)" class="hidden" />
+            </label>
+          </div>
+          <div id="labPhotoPreviewContainer" class="flex flex-wrap gap-2 pt-2 empty:hidden"></div>
+        </div>
+
         <div>
           <label class="block font-semibold mb-1">Blood Labs / Serology / Electrolytes / LFT / RFT</label>
-          <textarea id="subLabs" rows="4" placeholder="Hb - 13.5&#10;TLC - 9.8&#10;Na - 140&#10;K - 4.6" class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <textarea id="subLabs" rows="3" placeholder="Hb - 13.5&#10;TLC - 9.8&#10;Na - 140&#10;K - 4.6" class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <div>
           <label class="block font-semibold mb-1">Culture & Sensitivity (C/S)</label>
-          <textarea id="subCulture" rows="3" placeholder="Wound C/S: Growth of... Susceptible: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <textarea id="subCulture" rows="2" placeholder="Wound C/S: Growth of... Susceptible: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <div>
           <label class="block font-semibold mb-1">Imaging (USG / CT Peripheral Angiography / MRI / CT PA)</label>
-          <textarea id="subImaging" rows="3" placeholder="CT Peripheral Angiography: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <textarea id="subImaging" rows="2" placeholder="CT Peripheral Angiography: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <button type="button" onclick="saveSubLabs()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Labs & Scans</button>
       </div>
@@ -342,6 +369,7 @@
     let patients = [];
     let customDepts = JSON.parse(localStorage.getItem('surgix_custom_depts') || '[]');
     let currentBulkType = '';
+    let currentPatientLabPhotos = [];
 
     try {
       if (typeof firebase !== 'undefined') {
@@ -400,30 +428,28 @@
           patients = [{
             id: Date.now(),
             ward: "SICU",
-            name: "Sample Patient (Test)",
-            age: "52",
+            name: "Raja",
+            age: "45",
             sex: "M",
             hosp: "MRD-9988",
             adm: "IP-1122",
             admissionDate: getLocalDateISO(),
-            diag: "Carcinoma Stomach s/p Subtotal Gastrectomy",
-            plan: "Monitor vitals and abdominal drains",
-            surgeries: [{ id: 1, name: "Subtotal Gastrectomy", date: getLocalDateISO() }],
+            diag: "Post-op Case",
+            plan: "Monitor vitals",
+            surgeries: [{ id: 1, name: "Exploratory Laparotomy", date: getLocalDateISO() }],
             antibiotics: [{ id: 1, name: "Inj Pipzo 4.5g", date: getLocalDateISO() }],
-            bp: "120/80",
-            pr: "78",
-            cbg: "125",
-            cbgType: "6 units Regular Insulin",
-            rt: "50cc bilious",
-            dt: "20cc serosanguinous",
-            jp: "",
-            io: "Net +200ml",
+            bp: "130/80",
+            pr: "104",
+            cbg: "120",
+            cbgType: "",
+            rt: "", dt: "", jp: "", io: "",
             complaints: "Pain over surgical site",
             bladder: "Self voided",
             bowel: "passed stools",
             oe: "Conscious, oriented, afebrile",
             pa: "Soft, non tender, BS+",
             le: "Wound Healthy,Sutures intact, no active discharge or bleeding",
+            labPhotos: [],
             opinions: []
           }];
         }
@@ -547,45 +573,102 @@
       if (!list.length) return alert("No active patients found in this filter.");
 
       document.getElementById('bulkWardName').innerText = currentSelectedWardFilter;
+      document.getElementById('whatsappPasteArea').value = '';
       const titleMap = { vitals: '🩺 Bulk Update Vitals', cbg: '💉 Bulk Update CBG & Insulin', drains: '🧪 Bulk Update Drains', io: '💧 Bulk Update Fluid I/O' };
       document.getElementById('bulkModalTitle').innerText = titleMap[type] || 'Bulk Update';
 
+      renderBulkRows(list);
+      document.getElementById('mBulk').classList.add('active');
+    }
+
+    function renderBulkRows(list) {
       const container = document.getElementById('bulkRowsContainer');
       container.innerHTML = list.map((p, idx) => {
         let fieldsHtml = '';
-        if (type === 'vitals') {
+        if (currentBulkType === 'vitals') {
           fieldsHtml = `
             <div class="grid grid-cols-2 gap-2">
-              <input type="text" data-pid="${p.id}" data-field="bp" placeholder="BP (e.g. 120/80)" value="${p.bp || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
-              <input type="text" data-pid="${p.id}" data-field="pr" placeholder="PR (e.g. 72)" value="${p.pr || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="bp" placeholder="BP (e.g. 130/80)" value="${p.bp || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="pr" placeholder="PR (e.g. 104)" value="${p.pr || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
             </div>`;
-        } else if (type === 'cbg') {
+        } else if (currentBulkType === 'cbg') {
           fieldsHtml = `
             <div class="grid grid-cols-2 gap-2">
               <input type="text" data-pid="${p.id}" data-field="cbg" placeholder="CBG (mg/dL)" value="${p.cbg || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
               <input type="text" data-pid="${p.id}" data-field="cbgType" placeholder="Insulin/Context" value="${p.cbgType || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
             </div>`;
-        } else if (type === 'drains') {
+        } else if (currentBulkType === 'drains') {
           fieldsHtml = `
             <div class="grid grid-cols-3 gap-1.5">
               <input type="text" data-pid="${p.id}" data-field="rt" placeholder="RT" value="${p.rt || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
               <input type="text" data-pid="${p.id}" data-field="dt" placeholder="DT" value="${p.dt || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
               <input type="text" data-pid="${p.id}" data-field="jp" placeholder="JP" value="${p.jp || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
             </div>`;
-        } else if (type === 'io') {
+        } else if (currentBulkType === 'io') {
           fieldsHtml = `
             <input type="text" data-pid="${p.id}" data-field="io" placeholder="I/O Balance" value="${p.io || ''}" class="w-full border border-slate-300 rounded p-1.5 bg-white">`;
         }
 
         return `
-          <div class="pt-2 pb-2 space-y-1">
+          <div class="pt-2 pb-2 space-y-1" data-patient-name="${p.name.toLowerCase()}">
             <div class="font-bold text-slate-900">${idx + 1}. ${p.name} <span class="text-[10px] text-slate-500 font-normal">[${p.ward}]</span></div>
             ${fieldsHtml}
           </div>
         `;
       }).join('');
+    }
 
-      document.getElementById('mBulk').classList.add('active');
+    // Advanced Line-by-Line WhatsApp Paste Parser for Vitals Format
+    function parseAndApplyWhatsAppPaste() {
+      const text = document.getElementById('whatsappPasteArea').value;
+      if (!text.trim()) { alert("Please paste WhatsApp text first."); return; }
+
+      const act = patients.filter(p => p.ward !== 'Discharged');
+      const list = currentSelectedWardFilter === 'ALL' ? act : act.filter(p => p.ward === currentSelectedWardFilter);
+      
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      let matchedCount = 0;
+
+      if (currentBulkType === 'vitals') {
+        for (let i = 0; i < lines.length; i++) {
+          const currentLine = lines[i];
+          const matchedPatient = list.find(p => p.name.toLowerCase() === currentLine.toLowerCase());
+          
+          if (matchedPatient) {
+            let bpVal = '';
+            let prVal = '';
+            
+            if (i + 1 < lines.length && lines[i + 1].includes('/')) {
+              bpVal = lines[i + 1];
+            }
+            if (i + 2 < lines.length && /^\d+$/.test(lines[i + 2])) {
+              prVal = lines[i + 2];
+            }
+
+            if (bpVal || prVal) {
+              const bpInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="bp"]`);
+              const prInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="pr"]`);
+              if (bpInput && bpVal) bpInput.value = bpVal;
+              if (prInput && prVal) prInput.value = prVal;
+              matchedCount++;
+            }
+          }
+        }
+      } else {
+        let blockText = text;
+        list.forEach((p) => {
+          const pNameLower = p.name.toLowerCase();
+          if (blockText.toLowerCase().includes(pNameLower)) {
+            if (currentBulkType === 'cbg') {
+              const match = blockText.match(new RegExp(p.name + '[\\s\\S]*?([0-9]+)', 'i'));
+              const input = document.querySelector(`input[data-pid="${p.id}"][data-field="cbg"]`);
+              if (input && match) { input.value = match[1]; matchedCount++; }
+            }
+          }
+        });
+      }
+
+      alert(`Successfully matched and auto-filled data for ${matchedCount} patient(s) from WhatsApp text! Review and click Save.`);
     }
 
     async function saveBulkUpdates() {
@@ -659,6 +742,7 @@
       }
     }
 
+    // --- NATIVE OMR / MULTIPLE LAB PHOTO CAPTURE LOGIC ---
     function openLabsModal(id) {
       const p = patients.find(x => String(x.id) === String(id));
       if(!p) return;
@@ -667,7 +751,46 @@
       document.getElementById('subLabs').value = p.labsSummary || '';
       document.getElementById('subCulture').value = p.culture || '';
       document.getElementById('subImaging').value = p.imaging || '';
+      
+      currentPatientLabPhotos = p.labPhotos ? [...p.labPhotos] : [];
+      renderLabPhotoPreviews();
       document.getElementById('mLabs').classList.add('active');
+    }
+
+    function handleLabPhotoCapture(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(uploadEvent) {
+          currentPatientLabPhotos.push(uploadEvent.target.result);
+          renderLabPhotoPreviews();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removeLabPhoto(index) {
+      currentPatientLabPhotos.splice(index, 1);
+      renderLabPhotoPreviews();
+    }
+
+    function renderLabPhotoPreviews() {
+      const container = document.getElementById('labPhotoPreviewContainer');
+      if (!container) return;
+      if (!currentPatientLabPhotos.length) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = currentPatientLabPhotos.map((src, idx) => `
+        <div class="relative w-20 h-20 rounded-lg border border-teal-300 overflow-hidden shadow-sm group">
+          <img src="${src}" class="w-full h-full object-cover" />
+          <button type="button" onclick="removeLabPhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow hover:bg-rose-700 cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `).join('');
     }
 
     async function saveSubLabs() {
@@ -677,6 +800,7 @@
         p.labsSummary = document.getElementById('subLabs').value.trim();
         p.culture = document.getElementById('subCulture').value.trim();
         p.imaging = document.getElementById('subImaging').value.trim();
+        p.labPhotos = [...currentPatientLabPhotos];
         saveToStorage(); updateUI(); closeModals();
       }
     }
@@ -840,7 +964,7 @@
           pa: 'Soft, non tender, BS+', 
           le: 'Wound Healthy,Sutures intact, no active discharge or bleeding', 
           analPack: false, scrotalSupport: false, vacActive: false, vacDate: '', 
-          diet: '', dietSp: '', otherOrd: '', labsSummary: '', culture: '', imaging: '', opinions: [], dischargeDate: '' 
+          diet: '', dietSp: '', otherOrd: '', labsSummary: '', culture: '', imaging: '', labPhotos: [], opinions: [], dischargeDate: '' 
         });
         patients.push(data);
         activeId = data.id;
