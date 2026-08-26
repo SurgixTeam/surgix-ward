@@ -302,7 +302,7 @@
   <div id="mLabs" class="modal p-3 sm:p-4">
     <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Labs, Culture & Scans (Single-Day Handover Entry)</h3>
+        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Single-Day Handover Entry)</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
@@ -452,41 +452,7 @@
         if (Array.isArray(loc) && loc.length > 0) { 
           patients = scrubUndefinedNames(loc); 
         } else {
-          patients = [{
-            id: Date.now(),
-            ward: "SICU",
-            name: "Shanthi",
-            age: "41",
-            sex: "F",
-            hosp: "CARE0095126139",
-            adm: "IP-202608",
-            admissionDate: getLocalDateISO(),
-            diag: "RIGHT SOFT TISSUE DEFECT OVER VOLAR ASPECT OF 4th and 5th FINGERS",
-            plan: "Discharge with medications",
-            courseOfStay: "Patient was admitted with complaints. Routine investigations done. Initial diagnosis made. Patient taken up for FLAP DIVISION under LA on 26/08/26. Intra-op & post-op uneventful. Treated with IV antibiotics, analgesics, PPIs. Started on soft solid diet post-op. Improved and hemodynamically stable, discharged.",
-            surgeries: [{ id: 1, name: "Flap Division", date: "2026-08-26" }],
-            antibiotics: [],
-            bp: "110/80",
-            pr: "86",
-            cbg: "110",
-            cbgType: "NPO",
-            rt: "",
-            dt: "",
-            jp: "",
-            io: "1200/1000ml over 24hours clear urine",
-            complaints: "None",
-            bladder: "Self voided",
-            bowel: "passed stools",
-            oe: "Conscious, oriented, afebrile",
-            pa: "Soft, non tender",
-            le: "Wound healthy",
-            labsSummary: "",
-            culture: "",
-            imaging: "",
-            lastReportDate: "",
-            labPhotos: [],
-            opinions: []
-          }];
+          patients = [];
         }
       } catch (e) {}
 
@@ -501,6 +467,9 @@
             patients = scrubUndefinedNames(rawData);
             localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
             if (!activeId && patients.length) activeId = patients[0].id;
+            updateUI();
+          } else {
+            patients = [];
             updateUI();
           }
           const badge = document.getElementById('syncBadge');
@@ -1050,7 +1019,11 @@
     function clearEntireDatabase() {
       const c = prompt("⚠️ WARNING: This will permanently delete ALL patients.\n\nType CLEAR to confirm:");
       if (c === "CLEAR") {
-        patients = []; activeId = null; saveToStorage(); updateUI();
+        patients = []; 
+        activeId = null; 
+        localStorage.removeItem('surgix_ward_db_v8');
+        if (isFirebaseReady && db) db.ref('patients').set(null);
+        updateUI();
         alert("Database wiped clean.");
       }
     }
@@ -1103,7 +1076,7 @@
       
       let dp = currentSelectedWardFilter === 'ALL' ? act : act.filter(p => p.ward === currentSelectedWardFilter);
       if(!dp.length) { 
-        c.innerHTML = `<p class="text-xs text-slate-400 italic py-12 text-center">No patients found in this view.</p>`; 
+        c.innerHTML = `<p class="text-xs text-slate-400 italic py-12 text-center">No patients found in this view. Click "New Admission" to add one.</p>`; 
         return; 
       }
       
