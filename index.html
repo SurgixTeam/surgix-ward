@@ -216,6 +216,1187 @@
       <!-- WhatsApp Paste Section -->
       <div class="p-4 bg-emerald-50/60 border-b border-emerald-100 space-y-2">
         <label class="block font-bold text-emerald-900 text-xs flex items-center gap-1.5">
+          <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i> Paste WhatsApp Text Block to Auto-Fill
+        </label>
+        <textarea id="whatsappPasteArea" rows="4" placeholder="Paste WhatsApp format here..." class="w-full text-xs border border-emerald-300 rounded-lg p-2.5 font-mono focus:outline-none bg-white"></textarea>
+        <button type="button" onclick="parseAndApplyWhatsAppPaste()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm cursor-pointer flex items-center gap-1">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Fill from WhatsApp Text
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 text-xs overflow-y-auto flex-1">
+        <p class="text-slate-500 font-medium">Review / edit values for patients currently visible in active filter (<span id="bulkWardName">All</span>):</p>
+        <div id="bulkRowsContainer" class="space-y-3 divide-y divide-slate-100"></div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+        <button type="button" onclick="closeModals()" class="px-4 py-2 bg-slate-200 text-slate-700 font-bold rounded-lg cursor-pointer">Cancel</button>
+        <button type="button" onclick="saveBulkUpdates()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-lg cursor-pointer">Save All Updates</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Examination Modal -->
+  <div id="mExam" class="modal p-3 sm:p-4">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 id="examModalTitle" class="text-sm font-bold">📋 Patient Examination & Status</h3>
+        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
+        <input type="hidden" id="examPatientId">
+        <div><label class="block font-semibold mb-1">Complaints (C/o)</label><textarea id="eComp" rows="2" placeholder="e.g. Pain over surgical site" class="w-full border border-slate-300 rounded p-2"></textarea></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1">Bladder</label>
+            <select id="eBladder" class="w-full border border-slate-300 rounded p-2">
+              <option value="">-- Select --</option>
+              <option value="Self voided">Self voided</option>
+              <option value="Not voided">Not voided</option>
+              <option value="Foley's Catheter In Situ">Foley's In Situ</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Bowel</label>
+            <select id="eBowel" class="w-full border border-slate-300 rounded p-2">
+              <option value="">-- Select --</option>
+              <option value="passed flatus, passed stools">Flatus + Stools</option>
+              <option value="passed flatus">Passed Flatus</option>
+              <option value="Not Passed Flatus">Not Passed Flatus</option>
+              <option value="passed stools">Passed Stools</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="block font-semibold mb-1">O/E (General Examination)</label><input type="text" id="eOE" placeholder="conscious/oriented /Afebrile." class="w-full border border-slate-300 rounded p-2" /></div>
+        <div><label class="block font-semibold mb-1">P/A (Per Abdomen)</label><input type="text" id="ePA" placeholder="soft, non tender, BS+" class="w-full border border-slate-300 rounded p-2" /></div>
+        
+        <div class="bg-teal-50/60 p-3 rounded-lg border border-teal-200 space-y-2">
+          <label class="font-bold text-teal-950 block">Special Dressings & Local Exam (L/E)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="chkAnalPack" class="rounded text-teal-600 focus:ring-teal-500"> Anal pack in situ</label>
+            <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="chkScrotal" class="rounded text-teal-600 focus:ring-teal-500"> Scrotal support</label>
+          </div>
+          <div class="pt-1 border-t border-teal-100 flex items-center justify-between gap-2">
+            <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="chkVac" onchange="toggleVacDateInput()" class="rounded text-teal-600 focus:ring-teal-500"> VAC dressing (Insitu & Functional)</label>
+            <div id="vacDateWrap" class="hidden flex items-center gap-1">
+              <span class="text-[10px] text-teal-900 font-bold">Start:</span>
+              <input type="date" id="vacStartDate" class="text-[11px] border border-teal-300 rounded p-1 bg-white" />
+            </div>
+          </div>
+        </div>
+
+        <div><label class="block font-semibold mb-1">Additional L/E Notes</label><input type="text" id="eLE" placeholder="Wound Healthy,Sutures intact, no active discharge or bleeding" class="w-full border border-slate-300 rounded p-2" /></div>
+        <button type="button" onclick="saveExam()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Examination</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Labs & Scans Modal with Native Multiple Compressed OMR Photo Capture -->
+  <div id="mLabs" class="modal p-3 sm:p-4">
+    <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
+        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Multiple OMR)</h3>
+        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
+        <input type="hidden" id="labsPatientId">
+
+        <!-- Native OMR / Multiple Compressed Photo Capture Section -->
+        <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200 space-y-2">
+          <label class="font-bold text-teal-950 block flex items-center gap-1.5">
+            <i class="fa-solid fa-camera-retro text-teal-600 text-sm"></i> Native OMR / Upload Multiple Report Photos
+          </label>
+          <div class="flex gap-2 items-center">
+            <label class="flex-1 bg-white hover:bg-teal-100 border border-teal-300 text-teal-900 font-semibold py-2 px-3 rounded-lg text-center cursor-pointer shadow-sm flex items-center justify-center gap-2 transition">
+              <i class="fa-solid fa-images text-teal-600"></i> Select Multiple Report Photos
+              <input type="file" accept="image/*" multiple onchange="handleLabPhotoCapture(event)" class="hidden" />
+            </label>
+          </div>
+          <div id="labPhotoPreviewContainer" class="flex flex-wrap gap-2 pt-2 empty:hidden"></div>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1">Blood Labs / Serology / Electrolytes / LFT / RFT</label>
+          <textarea id="subLabs" rows="3" placeholder="Hb - 13.5&#10;TLC - 9.8&#10;Na - 140&#10;K - 4.6" class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Culture & Sensitivity (C/S)</label>
+          <textarea id="subCulture" rows="2" placeholder="Wound C/S: Growth of... Susceptible: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Imaging (USG / CT Peripheral Angiography / MRI / CT PA)</label>
+          <textarea id="subImaging" rows="2" placeholder="CT Peripheral Angiography: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+        </div>
+        <button type="button" onclick="saveSubLabs()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Labs & Scans</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Opinion Modal -->
+  <div id="mOpinion" class="modal p-3 sm:p-4">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-purple-900 text-white">
+        <h3 id="opinionModalTitle" class="text-sm font-bold">👥 Cross-Consultation Opinion</h3>
+        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
+        <input type="hidden" id="opinionPatientId">
+        <div>
+          <label class="block font-semibold mb-1">Department *</label>
+          <select id="opDeptSelect" onchange="handleOpinionDeptChange(this.value)" class="w-full border border-slate-300 rounded p-2 bg-white font-medium"></select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Opinion i/v/o (In view of / Indication)</label>
+          <input type="text" id="opReason" placeholder="e.g. Glycemic control / Evaluation of cellulitis" class="w-full border border-slate-300 rounded p-2" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Advice & Notes</label>
+          <textarea id="opAdvice" rows="3" placeholder="Specialist recommendations and medications..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+        </div>
+        <button type="button" onclick="saveOpinion()" class="w-full bg-purple-700 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Opinion</button>
+        <div id="opinionListContainer" class="mt-4 space-y-2 border-t pt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DB_URL = "https://surgix-ward-default-rtdb.firebaseio.com";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDXcR9IuXFcOOOSWnL8P1k_IBPRJCNPhtk",
+      authDomain: "surgix-ward.firebaseapp.com",
+      databaseURL: DB_URL,
+      projectId: "surgix-ward",
+      storageBucket: "surgix-ward.firebasestorage.app",
+      messagingSenderId: "826888647057",
+      appId: "1:826888647057:web:2755ebf9e8ee16b0bdea30"
+    };
+
+    let db = null;
+    let isFirebaseReady = false;
+    let patients = [];
+    let customDepts = JSON.parse(localStorage.getItem('surgix_custom_depts') || '[]');
+    let currentBulkType = '';
+    let currentPatientLabPhotos = [];
+
+    try {
+      if (typeof firebase !== 'undefined') {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        isFirebaseReady = true;
+      }
+    } catch (err) { console.warn("Firebase offline:", err); }
+
+    const WARD_CONFIG = [
+      { key: "ALL", label: "All Wards" },
+      { key: "SICU", label: "SICU", color: "bg-rose-50 text-rose-800 border-rose-200" },
+      { key: "MSW", label: "MSW", color: "bg-teal-50 text-teal-800 border-teal-200" },
+      { key: "FSW", label: "FSW", color: "bg-purple-50 text-purple-800 border-purple-200" },
+      { key: "GICU", label: "GICU", color: "bg-red-50 text-red-800 border-red-200" },
+      { key: "Corporate", label: "Corporate", color: "bg-amber-50 text-amber-800 border-amber-200" },
+      { key: "1A", label: "1A", color: "bg-orange-50 text-orange-800 border-orange-200" },
+      { key: "Paediatric ward", label: "Paediatric ward", color: "bg-yellow-50 text-yellow-800 border-yellow-200" },
+      { key: "Discharged", label: "Discharged", color: "bg-slate-100 text-slate-700 border-slate-200" }
+    ];
+
+    let currentMainTab = 'patients';
+    let currentSelectedWardFilter = 'ALL';
+    let activeId = null;
+    let currentProcedures = [];
+    let currentAntibiotics = [];
+
+    const getLocalDateISO = () => `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+    const getWardRank = (w) => { const cfg = WARD_CONFIG.find(x => x.key === w); return cfg ? WARD_CONFIG.indexOf(cfg) : 999; };
+
+    function scrubUndefinedNames(pts) {
+      pts.forEach(p => {
+        if (!p.name || p.name === 'undefined' || p.name === 'null') {
+          p.name = p.patientName || "Unknown Patient";
+        }
+      });
+      return pts;
+    }
+
+    function calcAbxDay(d) {
+      if (!d) return null;
+      const [y, m, day] = d.split('-').map(Number);
+      const dt = new Date(y, m - 1, day); dt.setHours(0, 0, 0, 0);
+      const now = new Date(); now.setHours(0, 0, 0, 0);
+      const diff = Math.floor((now - dt) / 86400000);
+      return diff >= 0 ? diff + 1 : 0; 
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      populateDeptDropdown();
+      try {
+        const loc = JSON.parse(localStorage.getItem('surgix_ward_db_v8') || '[]');
+        if (Array.isArray(loc) && loc.length > 0) { 
+          patients = scrubUndefinedNames(loc); 
+        } else {
+          patients = [{
+            id: Date.now(),
+            ward: "SICU",
+            name: "Palani",
+            age: "50",
+            sex: "M",
+            hosp: "MRD-9988",
+            adm: "IP-1122",
+            admissionDate: getLocalDateISO(),
+            diag: "Post-op Case",
+            plan: "Monitor drains and vitals",
+            surgeries: [{ id: 1, name: "Laparotomy", date: getLocalDateISO() }],
+            antibiotics: [{ id: 1, name: "Inj Pipzo 4.5g", date: getLocalDateISO() }],
+            bp: "120/80",
+            pr: "92",
+            cbg: "120",
+            cbgType: "NPO",
+            rt: "25ml over 12hours Mucoid",
+            dt: "10ml over 12hours Serosanguinous",
+            jp: "",
+            io: "1500/1200ml over 24hours clear urine",
+            complaints: "Pain over surgical site",
+            bladder: "Self voided",
+            bowel: "passed stools",
+            oe: "Conscious, oriented, afebrile",
+            pa: "Soft, non tender, BS+",
+            le: "Wound Healthy,Sutures intact, no active discharge or bleeding",
+            labPhotos: [],
+            opinions: []
+          }];
+        }
+      } catch (e) {}
+
+      if (!activeId && patients.length) activeId = patients[0].id;
+      updateUI();
+
+      if (isFirebaseReady && db) {
+        db.ref('patients').on('value', (snap) => {
+          const val = snap.val();
+          if (val) {
+            let rawData = Array.isArray(val) ? val : Object.values(val);
+            patients = scrubUndefinedNames(rawData);
+            localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
+            if (!activeId && patients.length) activeId = patients[0].id;
+            updateUI();
+          }
+          const badge = document.getElementById('syncBadge');
+          if(badge) {
+            badge.className = 'bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200 flex items-center gap-1';
+            badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE SYNC';
+          }
+        }, () => {
+          const badge = document.getElementById('syncBadge');
+          if(badge) {
+            badge.className = 'bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200';
+            badge.innerText = 'OFFLINE MODE';
+          }
+        });
+      } else {
+        const badge = document.getElementById('syncBadge');
+        if(badge) badge.innerText = 'LOCAL ONLY';
+      }
+    });
+
+    function saveToStorage() {
+      patients = scrubUndefinedNames(patients);
+      try {
+        localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
+      } catch (err) {
+        console.warn("Storage quota exceeded due to large images.");
+        alert("Storage limit reached due to image sizes.");
+      }
+      if (isFirebaseReady && db) db.ref('patients').set(patients).catch(console.error);
+    }
+
+    function populateDeptDropdown() {
+      const sel = document.getElementById('opDeptSelect');
+      if (!sel) return;
+      let html = `
+        <option value="ENT">ENT</option>
+        <option value="OPHTHALMOLOGY">OPHTHALMOLOGY</option>
+        <option value="GM">GM (General Medicine)</option>
+        <option value="OBG">OBG</option>
+        <option value="PAEDIATRICS">PAEDIATRICS</option>
+        <option value="MEDICAL GASTROENTEROLOGY">MEDICAL GASTROENTEROLOGY</option>
+        <option value="NEUROLOGY">NEUROLOGY</option>
+        <option value="UROLOGY">UROLOGY</option>
+        <option value="SURGICAL NEUROLOGY">SURGICAL NEUROLOGY</option>
+        <option value="PLASTIC SURGERY">PLASTIC SURGERY</option>
+        <option value="ANAESTHESIA">ANAESTHESIA</option>
+        <option value="NEPHROLOGY">NEPHROLOGY</option>
+      `;
+      customDepts.forEach(d => { html += `<option value="${d}">${d}</option>`; });
+      html += `<option value="__ADD_OTHER__">➕ Add Other Department...</option>`;
+      sel.innerHTML = html;
+    }
+
+    function handleOpinionDeptChange(val) {
+      if (val === '__ADD_OTHER__') {
+        const nd = prompt("Enter new Department name:");
+        if (nd && nd.trim()) {
+          const clean = nd.trim().toUpperCase();
+          if (!customDepts.includes(clean)) {
+            customDepts.push(clean);
+            localStorage.setItem('surgix_custom_depts', JSON.stringify(customDepts));
+          }
+          populateDeptDropdown();
+          document.getElementById('opDeptSelect').value = clean;
+        } else {
+          document.getElementById('opDeptSelect').value = 'ENT';
+        }
+      }
+    }
+
+    function switchMainTab(t) {
+      currentMainTab = t;
+      ['patients','handover'].forEach(x => {
+        const b = document.getElementById(`tabBtn-${x}`);
+        const c = document.getElementById(`tabContent-${x}`);
+        if (x === t) {
+          b.className = 'py-2.5 px-3.5 border-b-2 border-teal-600 text-teal-700 flex items-center gap-1.5 cursor-pointer font-bold whitespace-nowrap';
+          c.classList.remove('hidden');
+        } else {
+          b.className = 'py-2.5 px-3.5 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 cursor-pointer font-semibold whitespace-nowrap';
+          c.classList.add('hidden');
+        }
+      });
+      if (t === 'handover') renderOutputs();
+    }
+
+    function selectWardFilter(k) { currentSelectedWardFilter = k; renderWardSubTabs(); renderPatientList(); }
+
+    function renderWardSubTabs() {
+      const c = document.getElementById('wardSubTabsContainer');
+      if (!c) return;
+      const act = patients.filter(p => p.ward !== 'Discharged');
+      c.innerHTML = WARD_CONFIG.map(w => {
+        const cnt = w.key === 'ALL' ? act.length : act.filter(p => p.ward === w.key).length;
+        if (w.key !== 'ALL' && cnt === 0 && w.key !== 'Discharged') return '';
+        const sel = currentSelectedWardFilter === w.key;
+        return `<button type="button" onclick="selectWardFilter('${w.key}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer flex items-center gap-1 ${sel ? 'bg-slate-900 text-white border-slate-900 shadow-sm' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}"><span>${w.label}</span><span class="text-[10px] opacity-80 font-mono">(${cnt})</span></button>`;
+      }).join('');
+    }
+
+    function closeModals() {
+      document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+    }
+
+    // --- BULK UPDATE LOGIC ---
+    function openBulkModal(type) {
+      currentBulkType = type;
+      const act = patients.filter(p => p.ward !== 'Discharged');
+      const list = currentSelectedWardFilter === 'ALL' ? act : act.filter(p => p.ward === currentSelectedWardFilter);
+      if (!list.length) return alert("No active patients found in this filter.");
+
+      document.getElementById('bulkWardName').innerText = currentSelectedWardFilter;
+      document.getElementById('whatsappPasteArea').value = '';
+      const titleMap = { vitals: '🩺 Bulk Update Vitals', cbg: '💉 Bulk Update CBG & Insulin', drains: '🧪 Bulk Update Drains', io: '💧 Bulk Update Fluid I/O' };
+      document.getElementById('bulkModalTitle').innerText = titleMap[type] || 'Bulk Update';
+
+      renderBulkRows(list);
+      document.getElementById('mBulk').classList.add('active');
+    }
+
+    function renderBulkRows(list) {
+      const container = document.getElementById('bulkRowsContainer');
+      container.innerHTML = list.map((p, idx) => {
+        let fieldsHtml = '';
+        if (currentBulkType === 'vitals') {
+          fieldsHtml = `
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" data-pid="${p.id}" data-field="bp" placeholder="BP (e.g. 130/80)" value="${p.bp || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="pr" placeholder="PR (e.g. 104)" value="${p.pr || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+            </div>`;
+        } else if (currentBulkType === 'cbg') {
+          fieldsHtml = `
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" data-pid="${p.id}" data-field="cbg" placeholder="CBG Value (e.g. 120)" value="${p.cbg || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="cbgType" placeholder="Context (e.g. NPO / OHA / R6 N6)" value="${p.cbgType || ''}" class="border border-slate-300 rounded p-1.5 bg-white">
+            </div>`;
+        } else if (currentBulkType === 'drains') {
+          fieldsHtml = `
+            <div class="space-y-1.5">
+              <input type="text" data-pid="${p.id}" data-field="rt" placeholder="RT (e.g. 25ml over 12hours Mucoid)" value="${p.rt || ''}" class="w-full border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="dt" placeholder="DT (e.g. 10ml over 12hours Serosanguinous)" value="${p.dt || ''}" class="w-full border border-slate-300 rounded p-1.5 bg-white">
+              <input type="text" data-pid="${p.id}" data-field="jp" placeholder="JP (e.g. 20ml Serous)" value="${p.jp || ''}" class="w-full border border-slate-300 rounded p-1.5 bg-white">
+            </div>`;
+        } else if (currentBulkType === 'io') {
+          fieldsHtml = `
+            <input type="text" data-pid="${p.id}" data-field="io" placeholder="I/O (e.g. 1500/1200ml over 24hours clear urine)" value="${p.io || ''}" class="w-full border border-slate-300 rounded p-1.5 bg-white">`;
+        }
+
+        return `
+          <div class="pt-2 pb-2 space-y-1" data-patient-name="${p.name.toLowerCase()}">
+            <div class="font-bold text-slate-900">${idx + 1}. ${p.name} <span class="text-[10px] text-slate-500 font-normal">[${p.ward}]</span></div>
+            ${fieldsHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Advanced Line-by-Line WhatsApp Paste Parser for Vitals and Drains Format
+    function parseAndApplyWhatsAppPaste() {
+      const text = document.getElementById('whatsappPasteArea').value;
+      if (!text.trim()) { alert("Please paste WhatsApp text first."); return; }
+
+      const act = patients.filter(p => p.ward !== 'Discharged');
+      const list = currentSelectedWardFilter === 'ALL' ? act : act.filter(p => p.ward === currentSelectedWardFilter);
+      
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+      let matchedCount = 0;
+
+      if (currentBulkType === 'vitals') {
+        for (let i = 0; i < lines.length; i++) {
+          const currentLine = lines[i];
+          const matchedPatient = list.find(p => p.name.toLowerCase() === currentLine.toLowerCase());
+          
+          if (matchedPatient) {
+            let bpVal = '';
+            let prVal = '';
+            
+            if (i + 1 < lines.length && lines[i + 1].includes('/')) {
+              bpVal = lines[i + 1];
+            }
+            if (i + 2 < lines.length && /^\d+$/.test(lines[i + 2])) {
+              prVal = lines[i + 2];
+            }
+
+            if (bpVal || prVal) {
+              const bpInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="bp"]`);
+              const prInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="pr"]`);
+              if (bpInput && bpVal) bpInput.value = bpVal;
+              if (prInput && prVal) prInput.value = prVal;
+              matchedCount++;
+            }
+          }
+        }
+      } else if (currentBulkType === 'drains') {
+        for (let i = 0; i < lines.length; i++) {
+          const currentLine = lines[i];
+          const matchedPatient = list.find(p => p.name.toLowerCase() === currentLine.toLowerCase());
+          
+          if (matchedPatient) {
+            let dtVal = '';
+            let rtVal = '';
+            let jpVal = '';
+            
+            let nextIdx = i + 1;
+            while (nextIdx < lines.length && !list.some(p => p.name.toLowerCase() === lines[nextIdx].toLowerCase())) {
+              const l = lines[nextIdx];
+              if (/^dt[:\s]*/i.test(l)) {
+                dtVal = l.replace(/^dt[:\s]*/i, '');
+              } else if (/^rt[:\s]*/i.test(l)) {
+                rtVal = l.replace(/^rt[:\s]*/i, '');
+              } else if (/^jp[:\s]*/i.test(l)) {
+                jpVal = l.replace(/^jp[:\s]*/i, '');
+              }
+              nextIdx++;
+            }
+
+            if (dtVal || rtVal || jpVal) {
+              const dtInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="dt"]`);
+              const rtInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="rt"]`);
+              const jpInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="jp"]`);
+              if (dtInput && dtVal) dtInput.value = dtVal;
+              if (rtInput && rtVal) rtInput.value = rtVal;
+              if (jpInput && jpVal) jpInput.value = jpVal;
+              matchedCount++;
+            }
+          }
+        }
+      }
+
+      alert(`Successfully matched and auto-filled data for ${matchedCount} patient(s) from WhatsApp text! Review and click Save.`);
+    }
+
+    async function saveBulkUpdates() {
+      const container = document.getElementById('bulkRowsContainer');
+      const inputs = container.querySelectorAll('input[data-pid]');
+      inputs.forEach(input => {
+        const pid = input.getAttribute('data-pid');
+        const field = input.getAttribute('data-field');
+        const val = input.value.trim();
+        const p = patients.find(x => String(x.id) === String(pid));
+        if (p) {
+          p[field] = val;
+        }
+      });
+      saveToStorage();
+      updateUI();
+      closeModals();
+    }
+
+    function openExamModal(id) {
+      const p = patients.find(x => String(x.id) === String(id));
+      if(!p) return;
+      document.getElementById('examPatientId').value = p.id;
+      document.getElementById('examModalTitle').innerText = `📋 Examination: ${p.name}`;
+      document.getElementById('eComp').value = p.complaints || 'Pain over surgical site';
+      document.getElementById('eBladder').value = p.bladder || 'Self voided';
+      document.getElementById('eBowel').value = p.bowel || 'passed stools';
+      document.getElementById('eOE').value = p.oe || 'Conscious, oriented, afebrile';
+      document.getElementById('ePA').value = p.pa || 'Soft, non tender, BS+';
+      document.getElementById('eLE').value = p.le || 'Wound Healthy,Sutures intact, no active discharge or bleeding';
+
+      document.getElementById('chkAnalPack').checked = !!p.analPack;
+      document.getElementById('chkScrotal').checked = !!p.scrotalSupport;
+      document.getElementById('chkVac').checked = !!p.vacActive;
+      if (p.vacActive && p.vacDate) {
+        document.getElementById('vacStartDate').value = p.vacDate;
+        document.getElementById('vacDateWrap').classList.remove('hidden');
+      } else {
+        document.getElementById('vacStartDate').value = getLocalDateISO();
+        document.getElementById('vacDateWrap').classList.add('hidden');
+      }
+      document.getElementById('mExam').classList.add('active');
+    }
+
+    function toggleVacDateInput() {
+      const chk = document.getElementById('chkVac').checked;
+      const wrap = document.getElementById('vacDateWrap');
+      if (chk) {
+        wrap.classList.remove('hidden');
+        if (!document.getElementById('vacStartDate').value) document.getElementById('vacStartDate').value = getLocalDateISO();
+      } else {
+        wrap.classList.add('hidden');
+      }
+    }
+
+    async function saveExam() {
+      const id = document.getElementById('examPatientId').value;
+      const p = patients.find(x => String(x.id) === String(id));
+      if(p) {
+        p.complaints = document.getElementById('eComp').value;
+        p.bladder = document.getElementById('eBladder').value;
+        p.bowel = document.getElementById('eBowel').value;
+        p.oe = document.getElementById('eOE').value.trim();
+        p.pa = document.getElementById('ePA').value.trim();
+        p.le = document.getElementById('eLE').value.trim();
+        p.analPack = document.getElementById('chkAnalPack').checked;
+        p.scrotalSupport = document.getElementById('chkScrotal').checked;
+        p.vacActive = document.getElementById('chkVac').checked;
+        p.vacDate = p.vacActive ? (document.getElementById('vacStartDate').value || getLocalDateISO()) : '';
+        saveToStorage(); updateUI(); closeModals();
+      }
+    }
+
+    // --- NATIVE OMR / MULTIPLE COMPRESSED LAB PHOTO CAPTURE LOGIC ---
+    function openLabsModal(id) {
+      const p = patients.find(x => String(x.id) === String(id));
+      if(!p) return;
+      document.getElementById('labsPatientId').value = p.id;
+      document.getElementById('labsModalTitle').innerText = `🧪 Scans & Labs: ${p.name}`;
+      document.getElementById('subLabs').value = p.labsSummary || '';
+      document.getElementById('subCulture').value = p.culture || '';
+      document.getElementById('subImaging').value = p.imaging || '';
+      
+      currentPatientLabPhotos = p.labPhotos ? [...p.labPhotos] : [];
+      renderLabPhotoPreviews();
+      document.getElementById('mLabs').classList.add('active');
+    }
+
+    function handleLabPhotoCapture(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(uploadEvent) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 900;
+            const MAX_HEIGHT = 900;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            currentPatientLabPhotos.push(compressedDataUrl);
+            renderLabPhotoPreviews();
+          };
+          img.src = uploadEvent.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      e.target.value = '';
+    }
+
+    function removeLabPhoto(index) {
+      currentPatientLabPhotos.splice(index, 1);
+      renderLabPhotoPreviews();
+    }
+
+    function renderLabPhotoPreviews() {
+      const container = document.getElementById('labPhotoPreviewContainer');
+      if (!container) return;
+      if (!currentPatientLabPhotos.length) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = currentPatientLabPhotos.map((src, idx) => `
+        <div class="relative w-20 h-20 rounded-lg border border-teal-300 overflow-hidden shadow-sm group">
+          <img src="${src}" class="w-full h-full object-cover" />
+          <button type="button" onclick="removeLabPhoto(${idx})" class="absolute top-1 right-1 bg-rose-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow hover:bg-rose-700 cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function saveSubLabs() {
+      const id = document.getElementById('labsPatientId').value;
+      const p = patients.find(x => String(x.id) === String(id));
+      if(p) {
+        p.labsSummary = document.getElementById('subLabs').value.trim();
+        p.culture = document.getElementById('subCulture').value.trim();
+        p.imaging = document.getElementById('subImaging').value.trim();
+        p.labPhotos = [...currentPatientLabPhotos];
+        saveToStorage(); updateUI(); closeModals();
+      }
+    }
+
+    function openOpinionModal(id) {
+      const p = patients.find(x => String(x.id) === String(id));
+      if(!p) return;
+      document.getElementById('opinionPatientId').value = p.id;
+      document.getElementById('opinionModalTitle').innerText = `👥 Opinion: ${p.name}`;
+      document.getElementById('opDeptSelect').value = 'ENT';
+      document.getElementById('opReason').value = '';
+      document.getElementById('opAdvice').value = '';
+      renderOpinionList(p);
+      document.getElementById('mOpinion').classList.add('active');
+    }
+    
+    function renderOpinionList(p) {
+      const c = document.getElementById('opinionListContainer');
+      if (!p.opinions || !p.opinions.length) { c.innerHTML = ''; return; }
+      c.innerHTML = p.opinions.map((o, idx) => `
+        <div class="bg-purple-50 p-2 rounded border border-purple-200 text-xs">
+          <div class="flex justify-between font-bold border-b border-purple-200 pb-1 mb-1 text-purple-900">
+            <span>${o.dept} i/v/o ${o.reason}</span>
+            <button type="button" onclick="deleteOpinion('${p.id}', ${idx})" class="text-rose-500"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+          <div class="whitespace-pre-wrap">${o.advice}</div>
+        </div>
+      `).join('');
+    }
+    
+    async function deleteOpinion(pid, idx) {
+      const p = patients.find(x => String(x.id) === String(pid));
+      if(p && p.opinions) {
+        p.opinions.splice(idx, 1);
+        saveToStorage(); updateUI(); renderOpinionList(p);
+      }
+    }
+
+    async function saveOpinion() {
+      const id = document.getElementById('opinionPatientId').value;
+      const p = patients.find(x => String(x.id) === String(id));
+      if(p) {
+        const dept = document.getElementById('opDeptSelect').value;
+        const reason = document.getElementById('opReason').value.trim();
+        const advice = document.getElementById('opAdvice').value.trim();
+        if(!advice) { alert("Please enter advice notes."); return; }
+        if(!p.opinions) p.opinions = [];
+        p.opinions.push({ dept, reason: reason || 'Evaluation', advice });
+        saveToStorage(); updateUI(); renderOpinionList(p);
+        document.getElementById('opReason').value = '';
+        document.getElementById('opAdvice').value = '';
+        closeModals();
+      }
+    }
+
+    function openPatientModal(id=null) {
+      currentProcedures = [];
+      currentAntibiotics = [];
+      document.getElementById('patientForm').reset();
+      document.getElementById('editPatientId').value = '';
+      document.getElementById('admissionDate').value = getLocalDateISO();
+      if(id) {
+        const p = patients.find(x => x.id === id);
+        if(p) {
+          document.getElementById('editPatientId').value = p.id;
+          document.getElementById('wardCategory').value = p.ward || 'SICU';
+          document.getElementById('patientName').value = p.name || '';
+          document.getElementById('age').value = p.age || '';
+          document.getElementById('gender').value = p.sex || 'M';
+          document.getElementById('hospitalNo').value = p.hosp || '';
+          document.getElementById('admissionNo').value = p.adm || '';
+          document.getElementById('admissionDate').value = p.admissionDate || getLocalDateISO();
+          document.getElementById('diagnosis').value = p.diag || '';
+          document.getElementById('patientPlan').value = p.plan || '';
+          currentProcedures = p.surgeries ? [...p.surgeries] : [];
+          currentAntibiotics = p.antibiotics ? [...p.antibiotics] : [];
+        }
+      }
+      renderStagedProceduresList();
+      renderAntibioticsList();
+      document.getElementById('patientModal').classList.add('active');
+    }
+    function closePatientModal() { document.getElementById('patientModal').classList.remove('active'); }
+
+    function setTempProcToday() { document.getElementById('tempProcDate').value = getLocalDateISO(); }
+    function addProcedureToTempList() {
+      const n = document.getElementById('tempProcName').value.trim();
+      const d = document.getElementById('tempProcDate').value || getLocalDateISO();
+      if(n) {
+        currentProcedures.push({ id: Date.now(), name: n, date: d });
+        document.getElementById('tempProcName').value = '';
+        renderStagedProceduresList();
+      }
+    }
+    function removeProcedureFromTempList(id) {
+      currentProcedures = currentProcedures.filter(x => x.id !== id);
+      renderStagedProceduresList();
+    }
+    function renderStagedProceduresList() {
+      document.getElementById('stagedProceduresContainer').innerHTML = currentProcedures.map(pr => {
+        const pod = calcPOD(pr.date);
+        return `<div class="flex justify-between bg-white border rounded p-2 text-xs"><span>S/p ${pr.name} <strong class="text-amber-800">${pod!==null&&pod>=0?'POD#'+pod:'Planned'}</strong></span><button type="button" onclick="removeProcedureFromTempList(${pr.id})" class="text-rose-500 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button></div>`;
+      }).join('');
+    }
+
+    function setTempAbxToday() { document.getElementById('tempAbxDate').value = getLocalDateISO(); }
+    function addAbxToTempList() {
+      const n = document.getElementById('tempAbxName').value.trim();
+      const d = document.getElementById('tempAbxDate').value || getLocalDateISO();
+      if(n) {
+        currentAntibiotics.push({ id: Date.now(), name: n, date: d });
+        document.getElementById('tempAbxName').value = '';
+        renderAntibioticsList();
+      }
+    }
+    function removeAbxFromTempList(id) {
+      currentAntibiotics = currentAntibiotics.filter(x => x.id !== id);
+      renderAntibioticsList();
+    }
+    function renderAntibioticsList() {
+      document.getElementById('antibioticsContainer').innerHTML = currentAntibiotics.map(abx => {
+        const day = calcAbxDay(abx.date);
+        return `<div class="flex justify-between bg-white border rounded p-2 text-xs"><span>${abx.name} <strong class="text-indigo-800">${day !== null ? 'D' + day : ''}</strong></span><button type="button" onclick="removeAbxFromTempList(${abx.id})" class="text-rose-500 cursor-pointer"><i class="fa-solid fa-trash-can"></i></button></div>`;
+      }).join('');
+    }
+
+    function handleSavePatient(e) {
+      e.preventDefault();
+      const id = document.getElementById('editPatientId').value;
+      const w = document.getElementById('wardCategory').value;
+      const pName = document.getElementById('patientName').value.trim();
+
+      const data = {
+        id: id ? parseInt(id) : Date.now(),
+        ward: w,
+        name: pName,
+        age: document.getElementById('age').value.trim(),
+        sex: document.getElementById('gender').value,
+        hosp: document.getElementById('hospitalNo').value.trim(),
+        adm: document.getElementById('admissionNo').value.trim(),
+        admissionDate: document.getElementById('admissionDate').value || getLocalDateISO(),
+        diag: document.getElementById('diagnosis').value.trim(),
+        plan: document.getElementById('patientPlan').value.trim(),
+        surgeries: [...currentProcedures],
+        antibiotics: [...currentAntibiotics],
+        updatedAt: Date.now()
+      };
+      if (w !== 'Discharged') data.dischargeDate = '';
+
+      if(id) {
+        const ix = patients.findIndex(x => String(x.id) === String(id));
+        if(ix !== -1) patients[ix] = { ...patients[ix], ...data };
+      } else {
+        Object.assign(data, { 
+          createdAt: Date.now(), 
+          complaints: 'Pain over surgical site', 
+          bladder: 'Self voided', 
+          bowel: 'passed stools', 
+          bp: '', pr: '', cbg: '', cbgType: 'NPO', rt: '', dt: '', jp: '', io: '', 
+          oe: 'Conscious, oriented, afebrile', 
+          pa: 'Soft, non tender, BS+', 
+          le: 'Wound Healthy,Sutures intact, no active discharge or bleeding', 
+          analPack: false, scrotalSupport: false, vacActive: false, vacDate: '', 
+          diet: '', dietSp: '', otherOrd: '', labsSummary: '', culture: '', imaging: '', labPhotos: [], opinions: [], dischargeDate: '' 
+        });
+        patients.push(data);
+        activeId = data.id;
+      }
+      saveToStorage(); closePatientModal(); updateUI();
+    }
+
+    function dischargePatient(id) {
+      const p = patients.find(x => String(x.id) === String(id));
+      if(p && confirm("Discharge this patient?")) {
+        p.ward = 'Discharged';
+        p.dischargeDate = getLocalDateISO();
+        saveToStorage(); updateUI();
+      }
+    }
+
+    function deletePatientPermanently(id) {
+      if(confirm("Permanently delete this patient record?")) {
+        patients = patients.filter(x => String(x.id) !== String(id));
+        if(String(activeId) === String(id)) activeId = patients.length ? patients[0].id : null;
+        saveToStorage(); updateUI();
+      }
+    }
+
+    function clearEntireDatabase() {
+      const c = prompt("⚠️ WARNING: This will permanently delete ALL patients.\n\nType CLEAR to confirm:");
+      if (c === "CLEAR") {
+        patients = []; activeId = null; saveToStorage(); updateUI();
+        alert("Database wiped clean.");
+      }
+    }
+
+    function exportCensusCSV() {
+      let csv = "Hospital No,Admission No,Patient Name,Sex,Age,Diagnosis,Procedure,Date of Admission,Date of Procedure,Date of Discharge,Status\n";
+      patients.forEach(p => {
+        const hosp = `"${p.hosp || ''}"`;
+        const adm = `"${p.adm || ''}"`;
+        const name = `"${p.name || ''}"`;
+        const sex = `"${p.sex || ''}"`;
+        const age = `"${p.age || ''}"`;
+        const diag = `"${p.diag || ''}"`;
+        const surgs = Array.isArray(p.surgeries) ? p.surgeries : [];
+        const proc = `"${surgs.map(s => s.name).join('; ')}"`;
+        const doa = `"${p.admissionDate || ''}"`;
+        const dop = `"${surgs.map(s => s.date).join('; ')}"`;
+        const dod = `"${p.dischargeDate || ''}"`;
+        const status = `"${p.ward === 'Discharged' ? 'Discharged' : 'Active'}"`;
+        csv += `${hosp},${adm},${name},${sex},${age},${diag},${proc},${doa},${dop},${dod},${status}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Surgical_Census_${getLocalDateISO()}.csv`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }
+
+    function calcPOD(d) {
+      if (!d) return null;
+      const [y,m,day] = d.split('-').map(Number);
+      const dt = new Date(y, m-1, day); dt.setHours(0,0,0,0);
+      const now = new Date(); now.setHours(0,0,0,0);
+      const diff = Math.floor((now - dt) / 86400000);
+      return diff >= 0 ? diff : 0;
+    }
+
+    function updateUI() {
+      renderWardSubTabs();
+      renderPatientList();
+      if (currentMainTab === 'handover') renderOutputs();
+    }
+
+    function renderPatientList() {
+      const c = document.getElementById('patientListContainer');
+      const act = patients.filter(p => p.ward !== 'Discharged');
+      document.getElementById('tabCensusBadge').innerText = act.length;
+      
+      let dp = currentSelectedWardFilter === 'ALL' ? act : act.filter(p => p.ward === currentSelectedWardFilter);
+      if(!dp.length) { 
+        c.innerHTML = `<p class="text-xs text-slate-400 italic py-12 text-center">No patients found in this view.</p>`; 
+        return; 
+      }
+      
+      c.innerHTML = dp.map((p, i) => {
+        const wI = WARD_CONFIG.find(w => w.key === p.ward) || { label: p.ward, color: "" };
+        const isSel = String(p.id) === String(activeId);
+        
+        return `
+          <div onclick="activeId='${p.id}'; renderPatientList();" class="p-3.5 bg-white border ${isSel ? 'border-teal-500 ring-2 ring-teal-500/20 bg-teal-50/20' : 'border-slate-200'} rounded-xl shadow-sm text-xs cursor-pointer transition">
+            <div class="flex justify-between gap-2">
+              <div class="flex-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-bold text-slate-900">${i+1}. ${p.name}</span>
+                  <span class="text-slate-500">${p.age}/${p.sex}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] border ${wI.color}">[${wI.label}]</span>
+                </div>
+                ${(p.hosp || p.adm) ? `<div class="text-[10px] text-slate-500 font-mono mt-0.5">MRD: ${p.hosp||'-'} | IP: ${p.adm||'-'}</div>` : ''}
+                <p class="mt-1 font-medium text-slate-700"><strong>Dx:</strong> ${p.diag || 'No diagnosis'}</p>
+                ${p.plan ? `<div class="mt-1 text-[11px] text-teal-800"><strong>Plan:</strong> ${p.plan}</div>` : ''}
+              </div>
+              <div class="flex flex-col gap-1 items-end">
+                <div class="flex items-center gap-1 flex-wrap justify-end">
+                  <button type="button" onclick="event.stopPropagation(); openExamModal('${p.id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer border border-indigo-200"><i class="fa-solid fa-notes-medical mr-1"></i>Exam</button>
+                  <button type="button" onclick="event.stopPropagation(); openLabsModal('${p.id}')" class="bg-purple-50 hover:bg-purple-100 text-purple-700 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer border border-purple-200"><i class="fa-solid fa-file-waveform mr-1"></i>Scans</button>
+                  <button type="button" onclick="event.stopPropagation(); openOpinionModal('${p.id}')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer border border-amber-200"><i class="fa-solid fa-user-doctor mr-1"></i>Opinion</button>
+                  <button type="button" onclick="event.stopPropagation(); openPatientModal('${p.id}')" class="bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer">Edit</button>
+                </div>
+                <button type="button" onclick="event.stopPropagation(); dischargePatient('${p.id}')" class="text-rose-600 hover:text-rose-800 text-[10px] font-bold cursor-pointer mt-1">Discharge</button>
+                <button type="button" onclick="event.stopPropagation(); deletePatientPermanently('${p.id}')" class="text-slate-300 hover:text-rose-500 mt-1 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function formatBowelBladder(bladder, bowel) {
+      const blad = (bladder || '').trim(); const bow = (bowel || '').trim();
+      if (!blad && !bow) return '';
+      if (/self voided/i.test(blad) && /passed stools/i.test(bow)) return "Normal bowel and bladder habits";
+      return [blad, bow].filter(Boolean).join('/');
+    }
+
+    function formatSingle(p, idx) {
+      const lines = [];
+      const h = [`${idx}.`, p.name||'Unnamed', (p.age||p.sex)?`${p.age||''}/${p.sex||''}`:''].filter(Boolean).join(' ');
+      if (h) lines.push(h);
+      if (p.diag) lines.push(`Diagnosis: ${p.diag}`);
+      
+      const surgs = Array.isArray(p.surgeries) ? p.surgeries : [];
+      if (surgs.length) {
+        surgs.forEach(s => { if (s.name) { const pod = calcPOD(s.date); lines.push(`S/P: ${s.name} ${pod!==null?`(POD:${pod})`:''}`.trim()); } });
+      }
+      
+      if (p.plan) lines.push(`Plan for Surgery: ${p.plan}`);
+      if (p.complaints) { const c = p.complaints.split('\n').map(l=>l.trim()).filter(Boolean).join('\n'); if (c) lines.push(c); }
+
+      const bb = formatBowelBladder(p.bladder, p.bowel); if (bb) lines.push(bb);
+
+      const vit = [];
+      if (p.bp) vit.push(`BP: ${p.bp}mmHg`);
+      if (p.pr) vit.push(`PR: ${p.pr}bpm`);
+      if (p.cbg || p.cbgType) {
+        let cbgStr = "CBG:";
+        if (p.cbg) cbgStr += ` ${p.cbg}`;
+        if (p.cbgType) cbgStr += ` - (${p.cbgType})`;
+        vit.push(cbgStr);
+      }
+      if (p.rt) vit.push(`RT ${p.rt}`);
+      if (p.dt) vit.push(`DT ${p.dt}`);
+      if (p.jp) vit.push(`JP ${p.jp}`);
+      if (p.io) vit.push(`I/O: ${p.io}`);
+      if (vit.length) {
+        lines.push(`Vitals:`);
+        lines.push(...vit);
+      }
+      
+      if (p.oe) lines.push(`O/E: ${p.oe}`);
+      if (p.pa) lines.push(`P/A: ${p.pa}`);
+
+      let leParts = [];
+      if (p.le) leParts.push(p.le);
+      if (p.analPack) leParts.push("Anal Pack Insitu");
+      if (p.scrotalSupport) leParts.push("Scrotal Support Insitu");
+      if (p.vacActive) {
+        const vacDays = calcAbxDay(p.vacDate);
+        leParts.push(`VAC Insitu and Functional (D${vacDays})`);
+      }
+      if (leParts.length) {
+        lines.push(`L/E: ${leParts.join(', ')}`);
+      }
+
+      const on = [];
+      if (p.diet || p.dietSp) on.push(p.diet && p.dietSp ? `${p.diet} (${p.dietSp})` : (p.diet || p.dietSp));
+      
+      const abxs = Array.isArray(p.antibiotics) ? p.antibiotics : [];
+      if (abxs.length) {
+        abxs.forEach(a => { if (a.name) { const d = calcAbxDay(a.date); on.push(`${a.name} ${d!==null?`(D${d})`:''}`.trim()); } });
+      }
+      if (p.otherOrd) { const o = p.otherOrd.split('\n').map(l=>l.trim()).filter(Boolean); on.push(...o); }
+      if (on.length) {
+        lines.push(`On`);
+        lines.push(...on);
+      }
+
+      if (p.labsSummary) lines.push(`LABS:\n${p.labsSummary}`);
+      if (p.culture) lines.push(`CULTURE: ${p.culture}`);
+      if (p.imaging) lines.push(p.imaging);
+
+      if (Array.isArray(p.opinions) && p.opinions.length > 0) {
+        p.opinions.forEach(op => {
+          lines.push(`${op.dept} OPINION i/v/o ${op.reason}:\n${op.advice}`);
+        });
+      }
+
+      return lines.join('\n');
+    }
+
+    function generateHandoverText(patientList) {
+      const todayStr = getLocalDateISO();
+      const activePatients = patientList.filter(p => p.ward !== 'Discharged');
+      const dischargedPatients = patientList.filter(p => p.ward === 'Discharged' && p.dischargeDate === todayStr);
+      
+      if(activePatients.length === 0 && dischargedPatients.length === 0) return "No patients in ward.";
+
+      const now = new Date();
+      const isMorning = now.getHours() < 12;
+      const greeting = isMorning ? "Good morning sirs/maam" : "Good evening sirs/maam";
+
+      let text = `${greeting}\n`;
+      text += `Total census: ${activePatients.length}.\n`;
+
+      const wardCounts = {};
+      activePatients.forEach(p => {
+        const w = p.ward || 'Unassigned';
+        wardCounts[w] = (wardCounts[w] || 0) + 1;
+      });
+
+      const activeWards = Object.keys(wardCounts).sort((a,b) => getWardRank(a) - getWardRank(b));
+      activeWards.forEach(w => { text += `${w}: ${wardCounts[w]}\n`; });
+      text += `\n`;
+
+      let globalSerial = 1;
+      activeWards.forEach(w => {
+        text += `${w} : ${wardCounts[w]}\n`;
+        const wPatients = activePatients.filter(p => (p.ward || 'Unassigned') === w);
+        wPatients.forEach(p => {
+          text += formatSingle(p, globalSerial++);
+          text += `\n\n`;
+        });
+      });
+
+      text += `Thank you sirs/maam\n`;
+
+      if (dischargedPatients.length > 0) {
+        text += `\nDischarges: \n`;
+        dischargedPatients.forEach((p, i) => {
+          text += `${i+1}. ${p.name} ${p.age||''}/${p.sex||''}\n`;
+          if (p.diag) text += `Diagnosis: ${p.diag}\n`;
+          const surgs = Array.isArray(p.surgeries) ? p.surgeries : [];
+          if (surgs.length) {
+            surgs.forEach(s => { if (s.name) { const pod = calcPOD(s.date); text += `S/P: ${s.name} ${pod!==null?`(POD:${pod})`:''}\n`.trim(); } });
+          }
+          text += `\n`;
+        });
+      }
+
+      return text.trim();
+    }
+
+    function renderOutputs() {
+      let list = currentSelectedWardFilter === 'ALL' ? [...patients] : patients.filter(p => p.ward === currentSelectedWardFilter);
+      document.getElementById('outputArea').value = generateHandoverText(list);
+    }
+
+    function copyHandover() { document.getElementById('outputArea').select(); document.execCommand('copy'); alert("Handover copied to clipboard!"); }
+    function sendHandoverWhatsApp() { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(document.getElementById('outputArea').value)}`); }
+  </script>
+</body>
+</html>
+            <i class="fa-solid fa-file-medical text-teal-600 text-lg"></i>
+            <div><h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">WhatsApp Handover Format</h2></div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="copyHandover()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg cursor-pointer"><i class="fa-regular fa-copy mr-1"></i> Copy</button>
+            <button type="button" onclick="sendHandoverWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg cursor-pointer"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp</button>
+          </div>
+        </div>
+        <textarea id="outputArea" readonly class="w-full h-[600px] bg-slate-950 text-slate-200 p-4 rounded-xl font-mono text-xs leading-relaxed focus:outline-none resize-none"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================
+       PATIENT ADMISSION / EDIT MODAL
+       ========================================== -->
+  <div id="patientModal" class="modal p-3 sm:p-4">
+    <div class="relative max-w-3xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] my-auto">
+      <div class="flex items-center justify-between px-5 py-3.5 bg-slate-900 text-white">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-doctor text-teal-400 text-sm"></i>
+          <h3 id="modalTitle" class="text-sm font-bold tracking-tight">Inpatient File</h3>
+        </div>
+        <button type="button" onclick="closePatientModal()" class="text-slate-400 hover:text-white transition p-1 cursor-pointer"><i class="fa-solid fa-xmark text-base"></i></button>
+      </div>
+
+      <form id="patientForm" onsubmit="handleSavePatient(event)" class="p-5 overflow-y-auto space-y-4 text-xs">
+        <input type="hidden" id="editPatientId" value="">
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Ward *</label>
+            <select id="wardCategory" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium" required>
+              <optgroup label="Wards"><option value="SICU" selected>SICU</option><option value="MSW">MSW</option><option value="FSW">FSW</option><option value="GICU">GICU</option><option value="Corporate">Corporate</option><option value="1A">1A</option><option value="Paediatric ward">Paediatric ward</option></optgroup>
+              <optgroup label="Disposition"><option value="Discharged">Discharged</option></optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Name *</label>
+            <input type="text" id="patientName" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium" required />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Age *</label>
+              <input type="text" id="age" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none" required />
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Gender *</label>
+              <select id="gender" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none" required>
+                <option value="M">M</option><option value="F">F</option><option value="O">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200/85">
+          <div><label class="block font-semibold text-slate-600 mb-1">Hospital / IP No.</label><input type="text" id="hospitalNo" placeholder="IP/MRD No." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono focus:outline-none" /></div>
+          <div><label class="block font-semibold text-slate-600 mb-1">Admission No.</label><input type="text" id="admissionNo" placeholder="Adm No." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono focus:outline-none" /></div>
+          <div><label class="block font-semibold text-teal-900 mb-1">Date of Admission</label><input type="date" id="admissionDate" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none" /></div>
+        </div>
+
+        <div><label class="block font-semibold text-slate-700 mb-1">Clinical Diagnosis *</label><input type="text" id="diagnosis" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium" required /></div>
+
+        <!-- PROCEDURES -->
+        <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-200 space-y-2.5">
+          <label class="font-bold text-amber-950 block">Surgical Procedures (S/P)</label>
+          <div class="bg-white p-2.5 rounded-lg border border-amber-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+              <div class="sm:col-span-6"><input type="text" id="tempProcName" placeholder="Procedure Name" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-slate-50 focus:outline-none" /></div>
+              <div class="sm:col-span-4 flex items-center gap-1"><input type="date" id="tempProcDate" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-slate-50 focus:outline-none" /><button type="button" onclick="setTempProcToday()" class="text-[10px] bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold px-2 py-1.5 rounded cursor-pointer whitespace-nowrap">Today</button></div>
+              <div class="sm:col-span-2"><button type="button" onclick="addProcedureToTempList()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-1.5 rounded text-xs cursor-pointer">+ Add</button></div>
+            </div>
+          </div>
+          <div id="stagedProceduresContainer" class="space-y-1.5 pt-1 empty:hidden"></div>
+        </div>
+
+        <!-- ANTIBIOTICS TRACKING -->
+        <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-200 space-y-2.5">
+          <label class="font-bold text-indigo-950 block">Antibiotics Tracking</label>
+          <div class="bg-white p-2.5 rounded-lg border border-indigo-200 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+              <div class="sm:col-span-6"><input type="text" id="tempAbxName" placeholder="Antibiotic Name (e.g. Inj Pipzo 4.5g)" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-slate-50 focus:outline-none" /></div>
+              <div class="sm:col-span-4 flex items-center gap-1"><input type="date" id="tempAbxDate" class="w-full text-xs border border-slate-300 rounded p-1.5 bg-slate-50 focus:outline-none" /><button type="button" onclick="setTempAbxToday()" class="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-900 font-bold px-2 py-1.5 rounded cursor-pointer whitespace-nowrap">Today</button></div>
+              <div class="sm:col-span-2"><button type="button" onclick="addAbxToTempList()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 rounded text-xs cursor-pointer">+ Add</button></div>
+            </div>
+          </div>
+          <div id="antibioticsContainer" class="space-y-1.5 pt-1 empty:hidden"></div>
+        </div>
+
+        <div><label class="block font-semibold text-slate-700 mb-1">Plan for Surgery</label><input type="text" id="patientPlan" placeholder="e.g. SSG under SA" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:outline-none" /></div>
+
+        <div class="pt-2">
+          <button type="submit" class="w-full bg-teal-600 hover:bg-teal-700 active:scale-[0.99] text-white font-semibold py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 text-xs uppercase tracking-wider cursor-pointer">
+            <i class="fa-solid fa-check"></i> Save Inpatient Record
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BULK UPDATE MODAL WITH WHATSAPP PASTE -->
+  <div id="mBulk" class="modal p-3 sm:p-4">
+    <div class="relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto max-h-[90vh]">
+      <div class="flex items-center justify-between p-4 bg-teal-900 text-white">
+        <h3 id="bulkModalTitle" class="text-sm font-bold">📋 Ward Bulk Update</h3>
+        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <!-- WhatsApp Paste Section -->
+      <div class="p-4 bg-emerald-50/60 border-b border-emerald-100 space-y-2">
+        <label class="block font-bold text-emerald-900 text-xs flex items-center gap-1.5">
           <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i> Paste WhatsApp Text Block (Name, BP, Pulse) to Auto-Fill
         </label>
         <textarea id="whatsappPasteArea" rows="4" placeholder="Paste WhatsApp format here (e.g. Raja \n 130/80 \n 104)..." class="w-full text-xs border border-emerald-300 rounded-lg p-2.5 font-mono focus:outline-none bg-white"></textarea>
