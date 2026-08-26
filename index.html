@@ -290,41 +290,47 @@
     </div>
   </div>
 
-  <!-- Labs & Scans Modal with Highlighted Impression First Structure -->
+  <!-- Labs & Scans Modal with Separated Boxes & Gallery -->
   <div id="mLabs" class="modal p-3 sm:p-4">
     <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Impression First)</h3>
+        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Labs, Culture & Scans (Separated & Gallery)</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
         <input type="hidden" id="labsPatientId">
 
-        <!-- Photo Uploader -->
+        <!-- Multi-Photo Uploader Gallery -->
         <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200 space-y-2">
           <label class="font-bold text-teal-950 block flex items-center gap-1.5">
-            <i class="fa-solid fa-images text-teal-600 text-sm"></i> Attach Report Photos
+            <i class="fa-solid fa-images text-teal-600 text-sm"></i> Attach Report Photos (Multiple Gallery)
           </label>
           <label class="flex bg-white hover:bg-teal-100 border border-teal-300 text-teal-900 font-semibold py-2 px-3 rounded-lg text-center cursor-pointer shadow-sm items-center justify-center gap-2 transition">
-            <i class="fa-solid fa-camera text-teal-600"></i> Select Photos
+            <i class="fa-solid fa-camera text-teal-600"></i> Snap or Select Report Photos
             <input type="file" accept="image/*" multiple onchange="handleLabPhotoCapture(event)" class="hidden" />
           </label>
           <div id="labPhotoPreviewContainer" class="flex flex-wrap gap-2 pt-2 empty:hidden"></div>
         </div>
 
+        <!-- LABS BOX -->
         <div>
-          <label class="block font-semibold mb-1">Blood Labs / Serology / Electrolytes / LFT / RFT</label>
+          <label class="block font-semibold mb-1 text-teal-900 font-bold"><i class="fa-solid fa-flask mr-1"></i> LABS SECTION (Blood tests, Electrolytes, LFT, RFT)</label>
           <textarea id="subLabs" rows="3" placeholder="Hb - 13.5&#10;TLC - 9.8&#10;Na - 140&#10;K - 4.6" class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
+
+        <!-- CULTURE BOX -->
         <div>
-          <label class="block font-semibold mb-1">Culture & Sensitivity (C/S)</label>
-          <textarea id="subCulture" rows="3" placeholder="C/S details..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <label class="block font-semibold mb-1 text-indigo-900 font-bold"><i class="fa-solid fa-microscope mr-1"></i> CULTURE BOX (C/S, Growth, Resistant / Susceptible)</label>
+          <textarea id="subCulture" rows="3" placeholder="Wound C/S: Heavy growth of Pseudomonas aeruginosa&#10;- Resistant: Ceftazidime, Imipenem&#10;- Susceptible: None" class="w-full border border-indigo-300 rounded p-2 font-mono bg-indigo-50/20"></textarea>
         </div>
+
+        <!-- SCANS SECTION -->
         <div>
-          <label class="block font-semibold mb-1 text-teal-900 font-bold">Imaging / CT Scan (Impression Highlighted First)</label>
-          <textarea id="subImaging" rows="4" placeholder="IMPRESSION: No significant abnormality detected.&#10;&#10;Key findings: Randal plaques noted in all poles. Multiple prominent mesenteric lymph nodes in RIF." class="w-full border border-teal-300 rounded p-2 font-mono bg-teal-50/30"></textarea>
+          <label class="block font-semibold mb-1 text-purple-900 font-bold"><i class="fa-solid fa-x-ray mr-1"></i> SCANS SECTION (USG / CT / MRI — Highlight IMPRESSION First)</label>
+          <textarea id="subImaging" rows="4" placeholder="IMPRESSION: No significant abnormality detected.&#10;&#10;Key findings: Randal plaques noted in all poles." class="w-full border border-purple-300 rounded p-2 font-mono bg-purple-50/20"></textarea>
         </div>
-        <button type="button" onclick="saveSubLabs()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Labs & Scans</button>
+
+        <button type="button" onclick="saveSubLabs()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Reports & Scans</button>
       </div>
     </div>
   </div>
@@ -457,6 +463,8 @@
             oe: "Conscious, oriented, afebrile",
             pa: "Soft, non tender",
             le: "Normal",
+            labsSummary: "Hb - 13.5\nTLC - 9.8\nNa - 140\nK - 4.6",
+            culture: "Wound C/S: Heavy growth of Pseudomonas aeruginosa\n- Resistant: Ceftazidime, Imipenem\n- Susceptible: None",
             imaging: "IMPRESSION: No significant abnormality detected.\n\nKey Findings: Randal plaques noted in all poles. Multiple prominent mesenteric lymph nodes in RIF.",
             labPhotos: [],
             opinions: []
