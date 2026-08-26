@@ -28,9 +28,6 @@
   <!-- Firebase Compatibility SDKs for Realtime Database -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-  
-  <!-- Tesseract.js for Native OMR Text Recognition -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 
   <style>
     body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -293,28 +290,25 @@
     </div>
   </div>
 
-  <!-- Labs & Scans Modal with Native OCR Text Extraction -->
+  <!-- Labs & Scans Modal with Highlighted Impression First Structure -->
   <div id="mLabs" class="modal p-3 sm:p-4">
     <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Native OCR)</h3>
+        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Impression First)</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
         <input type="hidden" id="labsPatientId">
 
-        <!-- Native OMR & OCR Reader Section -->
+        <!-- Photo Uploader -->
         <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200 space-y-2">
           <label class="font-bold text-teal-950 block flex items-center gap-1.5">
-            <i class="fa-solid fa-wand-magic-sparkles text-teal-600 text-sm"></i> OMR Reader / Auto-Extract Text from Report Photos
+            <i class="fa-solid fa-images text-teal-600 text-sm"></i> Attach Report Photos
           </label>
-          <div class="flex gap-2 items-center">
-            <label class="flex-1 bg-white hover:bg-teal-100 border border-teal-300 text-teal-900 font-semibold py-2 px-3 rounded-lg text-center cursor-pointer shadow-sm flex items-center justify-center gap-2 transition">
-              <i class="fa-solid fa-camera text-teal-600"></i> Snap or Upload Report for OCR Reading
-              <input type="file" accept="image/*" multiple onchange="handleLabPhotoAndOCR(event)" class="hidden" />
-            </label>
-          </div>
-          <div id="ocrLoadingIndicator" class="hidden text-teal-700 font-bold italic text-center py-1"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Reading report text via OCR...</div>
+          <label class="flex bg-white hover:bg-teal-100 border border-teal-300 text-teal-900 font-semibold py-2 px-3 rounded-lg text-center cursor-pointer shadow-sm items-center justify-center gap-2 transition">
+            <i class="fa-solid fa-camera text-teal-600"></i> Select Photos
+            <input type="file" accept="image/*" multiple onchange="handleLabPhotoCapture(event)" class="hidden" />
+          </label>
           <div id="labPhotoPreviewContainer" class="flex flex-wrap gap-2 pt-2 empty:hidden"></div>
         </div>
 
@@ -324,11 +318,11 @@
         </div>
         <div>
           <label class="block font-semibold mb-1">Culture & Sensitivity (C/S)</label>
-          <textarea id="subCulture" rows="2" placeholder="Wound C/S: Growth of... Susceptible: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <textarea id="subCulture" rows="3" placeholder="C/S details..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <div>
-          <label class="block font-semibold mb-1">Imaging (USG / CT Peripheral Angiography / MRI / CT PA)</label>
-          <textarea id="subImaging" rows="2" placeholder="CT Peripheral Angiography: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <label class="block font-semibold mb-1 text-teal-900 font-bold">Imaging / CT Scan (Impression Highlighted First)</label>
+          <textarea id="subImaging" rows="4" placeholder="IMPRESSION: No significant abnormality detected.&#10;&#10;Key findings: Randal plaques noted in all poles. Multiple prominent mesenteric lymph nodes in RIF." class="w-full border border-teal-300 rounded p-2 font-mono bg-teal-50/30"></textarea>
         </div>
         <button type="button" onclick="saveSubLabs()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Labs & Scans</button>
       </div>
@@ -439,30 +433,31 @@
           patients = [{
             id: Date.now(),
             ward: "SICU",
-            name: "Palani",
-            age: "50",
-            sex: "M",
-            hosp: "MRD-9988",
-            adm: "IP-1122",
+            name: "Shanthi",
+            age: "41",
+            sex: "F",
+            hosp: "CARE0095126139",
+            adm: "IP-202608",
             admissionDate: getLocalDateISO(),
-            diag: "Post-op Case",
-            plan: "Monitor drains and vitals",
-            surgeries: [{ id: 1, name: "Laparotomy", date: getLocalDateISO() }],
-            antibiotics: [{ id: 1, name: "Inj Pipzo 4.5g", date: getLocalDateISO() }],
-            bp: "120/80",
-            pr: "92",
-            cbg: "120",
+            diag: "Evaluation of KUB",
+            plan: "Observation",
+            surgeries: [],
+            antibiotics: [],
+            bp: "110/80",
+            pr: "86",
+            cbg: "110",
             cbgType: "NPO",
-            rt: "25ml over 12hours Mucoid",
-            dt: "10ml over 12hours Serosanguinous",
+            rt: "",
+            dt: "",
             jp: "",
-            io: "1500/1200ml over 24hours clear urine",
-            complaints: "Pain over surgical site",
+            io: "1200/1000ml over 24hours clear urine",
+            complaints: "None",
             bladder: "Self voided",
             bowel: "passed stools",
             oe: "Conscious, oriented, afebrile",
-            pa: "Soft, non tender, BS+",
-            le: "Wound Healthy,Sutures intact, no active discharge or bleeding",
+            pa: "Soft, non tender",
+            le: "Normal",
+            imaging: "IMPRESSION: No significant abnormality detected.\n\nKey Findings: Randal plaques noted in all poles. Multiple prominent mesenteric lymph nodes in RIF.",
             labPhotos: [],
             opinions: []
           }];
@@ -505,7 +500,6 @@
       try {
         localStorage.setItem('surgix_ward_db_v8', JSON.stringify(patients));
       } catch (err) {
-        console.warn("Storage quota exceeded due to large images.");
         alert("Storage limit reached due to image sizes.");
       }
       if (isFirebaseReady && db) db.ref('patients').set(patients).catch(console.error);
@@ -672,40 +666,6 @@
             }
           }
         }
-      } else if (currentBulkType === 'drains') {
-        for (let i = 0; i < lines.length; i++) {
-          const currentLine = lines[i];
-          const matchedPatient = list.find(p => p.name.toLowerCase() === currentLine.toLowerCase());
-          
-          if (matchedPatient) {
-            let dtVal = '';
-            let rtVal = '';
-            let jpVal = '';
-            
-            let nextIdx = i + 1;
-            while (nextIdx < lines.length && !list.some(p => p.name.toLowerCase() === lines[nextIdx].toLowerCase())) {
-              const l = lines[nextIdx];
-              if (/^dt[:\s]*/i.test(l)) {
-                dtVal = l.replace(/^dt[:\s]*/i, '');
-              } else if (/^rt[:\s]*/i.test(l)) {
-                rtVal = l.replace(/^rt[:\s]*/i, '');
-              } else if (/^jp[:\s]*/i.test(l)) {
-                jpVal = l.replace(/^jp[:\s]*/i, '');
-              }
-              nextIdx++;
-            }
-
-            if (dtVal || rtVal || jpVal) {
-              const dtInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="dt"]`);
-              const rtInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="rt"]`);
-              const jpInput = document.querySelector(`input[data-pid="${matchedPatient.id}"][data-field="jp"]`);
-              if (dtInput && dtVal) dtInput.value = dtVal;
-              if (rtInput && rtVal) rtInput.value = rtVal;
-              if (jpInput && jpVal) jpInput.value = jpVal;
-              matchedCount++;
-            }
-          }
-        }
       }
 
       alert(`Successfully matched and auto-filled data for ${matchedCount} patient(s) from WhatsApp text! Review and click Save.`);
@@ -782,7 +742,7 @@
       }
     }
 
-    // --- NATIVE OMR & TESSERACT OCR READER ---
+    // --- LABS & IMAGING ---
     function openLabsModal(id) {
       const p = patients.find(x => String(x.id) === String(id));
       if(!p) return;
@@ -797,52 +757,32 @@
       document.getElementById('mLabs').classList.add('active');
     }
 
-    function handleLabPhotoAndOCR(e) {
+    function handleLabPhotoCapture(e) {
       const files = e.target.files;
       if (!files || files.length === 0) return;
       
-      const loadingEl = document.getElementById('ocrLoadingIndicator');
-      loadingEl.classList.remove('hidden');
-
       Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = function(uploadEvent) {
           const img = new Image();
-          img.onload = async function() {
+          img.onload = function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1000;
-            const MAX_HEIGHT = 1000;
+            const MAX_WIDTH = 900;
+            const MAX_HEIGHT = 900;
             let width = img.width;
             let height = img.height;
-            
             if (width > height) {
               if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
             } else {
               if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
             }
-            
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
             currentPatientLabPhotos.push(compressedDataUrl);
             renderLabPhotoPreviews();
-
-            // Run Tesseract OCR on the compressed image
-            try {
-              const result = await Tesseract.recognize(compressedDataUrl, 'eng');
-              const extractedText = result.data.text.trim();
-              if (extractedText) {
-                const labsArea = document.getElementById('subLabs');
-                labsArea.value = (labsArea.value ? labsArea.value + '\n\n[OCR Scan]:\n' : '[OCR Scan]:\n') + extractedText;
-              }
-            } catch (err) {
-              console.warn("OCR reading failed:", err);
-            } finally {
-              loadingEl.classList.add('hidden');
-            }
           };
           img.src = uploadEvent.target.result;
         };
@@ -1232,7 +1172,7 @@
       }
 
       if (p.labsSummary) lines.push(`LABS:\n${p.labsSummary}`);
-      if (p.culture) lines.push(`CULTURE: ${p.culture}`);
+      if (p.culture) lines.push(`CULTURE:\n${p.culture}`);
       if (p.imaging) lines.push(p.imaging);
 
       if (Array.isArray(p.opinions) && p.opinions.length > 0) {
