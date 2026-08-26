@@ -28,6 +28,9 @@
   <!-- Firebase Compatibility SDKs for Realtime Database -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  
+  <!-- Tesseract.js for Native OMR Text Recognition -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 
   <style>
     body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -290,27 +293,28 @@
     </div>
   </div>
 
-  <!-- Labs & Scans Modal with Native Multiple Compressed OMR Photo Capture -->
+  <!-- Labs & Scans Modal with Native OCR Text Extraction -->
   <div id="mLabs" class="modal p-3 sm:p-4">
     <div class="relative max-w-xl w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
-        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Multiple OMR)</h3>
+        <h3 id="labsModalTitle" class="text-sm font-bold">🧪 Scans, Labs & Culture Reports (Native OCR)</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
         <input type="hidden" id="labsPatientId">
 
-        <!-- Native OMR / Multiple Compressed Photo Capture Section -->
+        <!-- Native OMR & OCR Reader Section -->
         <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200 space-y-2">
           <label class="font-bold text-teal-950 block flex items-center gap-1.5">
-            <i class="fa-solid fa-camera-retro text-teal-600 text-sm"></i> Native OMR / Upload Multiple Report Photos
+            <i class="fa-solid fa-wand-magic-sparkles text-teal-600 text-sm"></i> OMR Reader / Auto-Extract Text from Report Photos
           </label>
           <div class="flex gap-2 items-center">
             <label class="flex-1 bg-white hover:bg-teal-100 border border-teal-300 text-teal-900 font-semibold py-2 px-3 rounded-lg text-center cursor-pointer shadow-sm flex items-center justify-center gap-2 transition">
-              <i class="fa-solid fa-images text-teal-600"></i> Select Multiple Report Photos
-              <input type="file" accept="image/*" multiple onchange="handleLabPhotoCapture(event)" class="hidden" />
+              <i class="fa-solid fa-camera text-teal-600"></i> Snap or Upload Report for OCR Reading
+              <input type="file" accept="image/*" multiple onchange="handleLabPhotoAndOCR(event)" class="hidden" />
             </label>
           </div>
+          <div id="ocrLoadingIndicator" class="hidden text-teal-700 font-bold italic text-center py-1"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Reading report text via OCR...</div>
           <div id="labPhotoPreviewContainer" class="flex flex-wrap gap-2 pt-2 empty:hidden"></div>
         </div>
 
@@ -633,7 +637,6 @@
       }).join('');
     }
 
-    // Advanced Line-by-Line WhatsApp Paste Parser for Vitals and Drains Format
     function parseAndApplyWhatsAppPaste() {
       const text = document.getElementById('whatsappPasteArea').value;
       if (!text.trim()) { alert("Please paste WhatsApp text first."); return; }
@@ -779,7 +782,7 @@
       }
     }
 
-    // --- NATIVE OMR / MULTIPLE COMPRESSED LAB PHOTO CAPTURE LOGIC ---
+    // --- NATIVE OMR & TESSERACT OCR READER ---
     function openLabsModal(id) {
       const p = patients.find(x => String(x.id) === String(id));
       if(!p) return;
@@ -794,18 +797,21 @@
       document.getElementById('mLabs').classList.add('active');
     }
 
-    function handleLabPhotoCapture(e) {
+    function handleLabPhotoAndOCR(e) {
       const files = e.target.files;
       if (!files || files.length === 0) return;
       
+      const loadingEl = document.getElementById('ocrLoadingIndicator');
+      loadingEl.classList.remove('hidden');
+
       Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = function(uploadEvent) {
           const img = new Image();
-          img.onload = function() {
+          img.onload = async function() {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 900;
-            const MAX_HEIGHT = 900;
+            const MAX_WIDTH = 1000;
+            const MAX_HEIGHT = 1000;
             let width = img.width;
             let height = img.height;
             
@@ -820,9 +826,23 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
             currentPatientLabPhotos.push(compressedDataUrl);
             renderLabPhotoPreviews();
+
+            // Run Tesseract OCR on the compressed image
+            try {
+              const result = await Tesseract.recognize(compressedDataUrl, 'eng');
+              const extractedText = result.data.text.trim();
+              if (extractedText) {
+                const labsArea = document.getElementById('subLabs');
+                labsArea.value = (labsArea.value ? labsArea.value + '\n\n[OCR Scan]:\n' : '[OCR Scan]:\n') + extractedText;
+              }
+            } catch (err) {
+              console.warn("OCR reading failed:", err);
+            } finally {
+              loadingEl.classList.add('hidden');
+            }
           };
           img.src = uploadEvent.target.result;
         };
