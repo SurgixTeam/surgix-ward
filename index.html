@@ -199,7 +199,7 @@
         <!-- COURSE OF STAY -->
         <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-200 space-y-1.5">
           <label class="font-bold text-amber-950 block flex items-center gap-1.5">
-            <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Course of Stay / Hospital Course Log
+            <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Course of Stay / Hospital Course Log (Database / Discharge Record Only)
           </label>
           <textarea id="patientCourse" rows="3" placeholder="Record daily events, procedures, and clinical progression..." class="w-full border border-amber-300 rounded p-2 bg-white font-mono text-[11px]"></textarea>
         </div>
@@ -855,7 +855,7 @@
         p.labsSummary = document.getElementById('subLabs').value.trim();
         p.culture = document.getElementById('subCulture').value.trim();
         p.imaging = document.getElementById('subImaging').value.trim();
-        p.lastReportDate = getLocalDateISO(); // Stamps entry date so handover only displays it for today
+        p.lastReportDate = getLocalDateISO();
         p.labPhotos = [...currentPatientLabPhotos];
         saveToStorage(); updateUI(); closeModals();
       }
@@ -1125,7 +1125,6 @@
                 ${(p.hosp || p.adm) ? `<div class="text-[10px] text-slate-500 font-mono mt-0.5">MRD: ${p.hosp||'-'} | IP: ${p.adm||'-'}</div>` : ''}
                 <p class="mt-1 font-medium text-slate-700"><strong>Dx:</strong> ${p.diag || 'No diagnosis'}</p>
                 ${p.plan ? `<div class="mt-1 text-[11px] text-teal-800"><strong>Plan:</strong> ${p.plan}</div>` : ''}
-                ${p.courseOfStay ? `<div class="mt-1 text-[11px] text-amber-900 bg-amber-50 p-1.5 rounded border border-amber-200"><strong>Course:</strong> ${p.courseOfStay}</div>` : ''}
                 ${photoThumbnails}
               </div>
               <div class="flex flex-col gap-1 items-end">
@@ -1163,7 +1162,6 @@
       }
       
       if (p.plan) lines.push(`Plan for Surgery: ${p.plan}`);
-      if (p.courseOfStay) lines.push(`Course of Stay:\n${p.courseOfStay}`);
       if (p.complaints) { const c = p.complaints.split('\n').map(l=>l.trim()).filter(Boolean).join('\n'); if (c) lines.push(c); }
 
       const bb = formatBowelBladder(p.bladder, p.bowel); if (bb) lines.push(bb);
@@ -1273,7 +1271,6 @@
         dischargedPatients.forEach((p, i) => {
           text += `${i+1}. ${p.name} ${p.age||''}/${p.sex||''}\n`;
           if (p.diag) text += `Diagnosis: ${p.diag}\n`;
-          if (p.courseOfStay) text += `Course of Stay: ${p.courseOfStay}\n`;
           const surgs = Array.isArray(p.surgeries) ? p.surgeries : [];
           if (surgs.length) {
             surgs.forEach(s => { if (s.name) { const pod = calcPOD(s.date); text += `S/P: ${s.name} ${pod!==null?`(POD:${pod})`:''}\n`.trim(); } });
