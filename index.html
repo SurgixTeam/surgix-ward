@@ -158,9 +158,10 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200/85">
           <div><label class="block font-semibold text-slate-600 mb-1">Hospital / IP No.</label><input type="text" id="hospitalNo" placeholder="IP/MRD No." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono focus:outline-none" /></div>
           <div><label class="block font-semibold text-slate-600 mb-1">Admission No.</label><input type="text" id="admissionNo" placeholder="Adm No." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono focus:outline-none" /></div>
+          <div><label class="block font-semibold text-teal-900 mb-1">Date of Admission</label><input type="date" id="admissionDate" class="w-full text-xs border border-teal-300 rounded-lg p-2 bg-white focus:outline-none" /></div>
         </div>
 
         <div><label class="block font-semibold text-slate-700 mb-1">Clinical Diagnosis *</label><input type="text" id="diagnosis" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium" required /></div>
@@ -260,7 +261,7 @@
 
   <!-- Examination Modal -->
   <div id="mExam" class="modal p-3 sm:p-4">
-    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+    <div class="relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
       <div class="flex items-center justify-between p-4 bg-slate-900 text-white">
         <h3 id="examModalTitle" class="text-sm font-bold">📋 Patient Examination & Status</h3>
         <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
@@ -284,7 +285,23 @@
         </div>
         <div><label class="block font-semibold mb-1">O/E (General Examination)</label><input type="text" id="eOE" placeholder="conscious/oriented /Afebrile." class="w-full border border-slate-300 rounded p-2" /></div>
         <div><label class="block font-semibold mb-1">P/A (Per Abdomen)</label><input type="text" id="ePA" placeholder="soft, non tender, BS+" class="w-full border border-slate-300 rounded p-2" /></div>
-        <div><label class="block font-semibold mb-1">L/E (Local Examination)</label><input type="text" id="eLE" placeholder="dressings intact / No soakage" class="w-full border border-slate-300 rounded p-2" /></div>
+        
+        <div class="bg-teal-50/60 p-3 rounded-lg border border-teal-200 space-y-2">
+          <label class="font-bold text-teal-950 block">Special Dressings & Local Exam (L/E)</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="chkAnalPack" class="rounded text-teal-600 focus:ring-teal-500"> Anal pack in situ</label>
+            <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="chkScrotal" class="rounded text-teal-600 focus:ring-teal-500"> Scrotal support</label>
+          </div>
+          <div class="pt-1 border-t border-teal-100 flex items-center justify-between gap-2">
+            <label class="flex items-center gap-1.5 font-medium text-slate-700 cursor-pointer"><input type="checkbox" id="chkVac" onchange="toggleVacDateInput()" class="rounded text-teal-600 focus:ring-teal-500"> VAC dressing (Insitu & Functional)</label>
+            <div id="vacDateWrap" class="hidden flex items-center gap-1">
+              <span class="text-[10px] text-teal-900 font-bold">Start:</span>
+              <input type="date" id="vacStartDate" class="text-[11px] border border-teal-300 rounded p-1 bg-white" />
+            </div>
+          </div>
+        </div>
+
+        <div><label class="block font-semibold mb-1">Additional L/E Notes</label><input type="text" id="eLE" placeholder="dressings intact / No soakage" class="w-full border border-slate-300 rounded p-2" /></div>
         <button type="button" onclick="saveExam()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Examination</button>
       </div>
     </div>
@@ -300,18 +317,58 @@
       <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
         <input type="hidden" id="labsPatientId">
         <div>
-          <label class="block font-semibold mb-1">Blood Labs / Serology</label>
-          <textarea id="subLabs" rows="3" placeholder="Hb, TLC, Plt, Creat, LFT..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <label class="block font-semibold mb-1">Blood Labs / Serology / Electrolytes / LFT / RFT</label>
+          <textarea id="subLabs" rows="4" placeholder="Hb - 13.5&#10;TLC - 9.8&#10;Na - 140&#10;K - 4.6" class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <div>
           <label class="block font-semibold mb-1">Culture & Sensitivity (C/S)</label>
           <textarea id="subCulture" rows="3" placeholder="Wound C/S: Growth of... Susceptible: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <div>
-          <label class="block font-semibold mb-1">Imaging (USG / CT / MRI)</label>
-          <textarea id="subImaging" rows="3" placeholder="CECT Abdomen: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+          <label class="block font-semibold mb-1">Imaging (USG / CT Peripheral Angiography / MRI / CT PA)</label>
+          <textarea id="subImaging" rows="3" placeholder="CT Peripheral Angiography: ..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
         </div>
         <button type="button" onclick="saveSubLabs()" class="w-full bg-teal-600 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Labs & Scans</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Opinion Modal (Dedicated per patient button with Departments) -->
+  <div id="mOpinion" class="modal p-3 sm:p-4">
+    <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col my-auto">
+      <div class="flex items-center justify-between p-4 bg-purple-900 text-white">
+        <h3 id="opinionModalTitle" class="text-sm font-bold">👥 Cross-Consultation Opinion</h3>
+        <button type="button" onclick="closeModals()" class="text-slate-400 p-1 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-4 space-y-3 text-xs max-h-[80vh] overflow-y-auto">
+        <input type="hidden" id="opinionPatientId">
+        <div>
+          <label class="block font-semibold mb-1">Department *</label>
+          <select id="opDeptSelect" onchange="handleOpinionDeptChange(this.value)" class="w-full border border-slate-300 rounded p-2 bg-white font-medium">
+            <option value="ENT">ENT</option>
+            <option value="OPHTHALMOLOGY">OPHTHALMOLOGY</option>
+            <option value="GM">GM (General Medicine)</option>
+            <option value="OBG">OBG</option>
+            <option value="PAEDIATRICS">PAEDIATRICS</option>
+            <option value="MEDICAL GASTROENTEROLOGY">MEDICAL GASTROENTEROLOGY</option>
+            <option value="NEUROLOGY">NEUROLOGY</option>
+            <option value="UROLOGY">UROLOGY</option>
+            <option value="SURGICAL NEUROLOGY">SURGICAL NEUROLOGY</option>
+            <option value="PLASTIC SURGERY">PLASTIC SURGERY</option>
+            <option value="ANAESTHESIA">ANAESTHESIA</option>
+            <option value="NEPHROLOGY">NEPHROLOGY</option>
+            <option value="__ADD_OTHER__">➕ Add Other Department...</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Opinion i/v/o (In view of / Indication)</label>
+          <input type="text" id="opReason" placeholder="e.g. Glycemic control / Evaluation of cellulitis" class="w-full border border-slate-300 rounded p-2" />
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Advice & Notes</label>
+          <textarea id="opAdvice" rows="3" placeholder="Specialist recommendations and medications..." class="w-full border border-slate-300 rounded p-2 font-mono"></textarea>
+        </div>
+        <button type="button" onclick="saveOpinion()" class="w-full bg-purple-700 text-white font-bold py-2.5 rounded-lg cursor-pointer mt-2">Save Opinion</button>
       </div>
     </div>
   </div>
@@ -343,6 +400,7 @@
     let db = null;
     let isFirebaseReady = false;
     let patients = [];
+    let customDepts = JSON.parse(localStorage.getItem('surgix_custom_depts') || '[]');
 
     try {
       if (typeof firebase !== 'undefined') {
@@ -383,8 +441,9 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      populateDeptDropdown();
       try {
-        const loc = JSON.parse(localStorage.getItem('surgix_ward_db_v5') || '[]');
+        const loc = JSON.parse(localStorage.getItem('surgix_ward_db_v7') || '[]');
         if (Array.isArray(loc) && loc.length > 0) { 
           patients = scrubUndefinedNames(loc); 
           if (!activeId && patients.length) activeId = patients[0].id;
@@ -397,7 +456,7 @@
           const val = snap.val();
           let rawData = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
           patients = scrubUndefinedNames(rawData);
-          localStorage.setItem('surgix_ward_db_v5', JSON.stringify(patients));
+          localStorage.setItem('surgix_ward_db_v7', JSON.stringify(patients));
           if (!activeId && patients.length) activeId = patients[0].id;
           updateUI();
           const badge = document.getElementById('syncBadge');
@@ -421,8 +480,50 @@
 
     function saveToStorage() {
       patients = scrubUndefinedNames(patients);
-      localStorage.setItem('surgix_ward_db_v5', JSON.stringify(patients));
+      localStorage.setItem('surgix_ward_db_v7', JSON.stringify(patients));
       if (isFirebaseReady && db) db.ref('patients').set(patients).catch(console.error);
+    }
+
+    function populateDeptDropdown() {
+      const sel = document.getElementById('opDeptSelect');
+      if (!sel) return;
+      // Keep static defaults + append custom
+      let html = `
+        <option value="ENT">ENT</option>
+        <option value="OPHTHALMOLOGY">OPHTHALMOLOGY</option>
+        <option value="GM">GM (General Medicine)</option>
+        <option value="OBG">OBG</option>
+        <option value="PAEDIATRICS">PAEDIATRICS</option>
+        <option value="MEDICAL GASTROENTEROLOGY">MEDICAL GASTROENTEROLOGY</option>
+        <option value="NEUROLOGY">NEUROLOGY</option>
+        <option value="UROLOGY">UROLOGY</option>
+        <option value="SURGICAL NEUROLOGY">SURGICAL NEUROLOGY</option>
+        <option value="PLASTIC SURGERY">PLASTIC SURGERY</option>
+        <option value="ANAESTHESIA">ANAESTHESIA</option>
+        <option value="NEPHROLOGY">NEPHROLOGY</option>
+      `;
+      customDepts.forEach(d => {
+        html += `<option value="${d}">${d}</option>`;
+      });
+      html += `<option value="__ADD_OTHER__">➕ Add Other Department...</option>`;
+      sel.innerHTML = html;
+    }
+
+    function handleOpinionDeptChange(val) {
+      if (val === '__ADD_OTHER__') {
+        const nd = prompt("Enter new Department name:");
+        if (nd && nd.trim()) {
+          const clean = nd.trim().toUpperCase();
+          if (!customDepts.includes(clean)) {
+            customDepts.push(clean);
+            localStorage.setItem('surgix_ward_db_v7_depts', JSON.stringify(customDepts));
+          }
+          populateDeptDropdown();
+          document.getElementById('opDeptSelect').value = clean;
+        } else {
+          document.getElementById('opDeptSelect').value = 'ENT';
+        }
+      }
     }
 
     function switchMainTab(t) {
@@ -550,6 +651,19 @@
     }
 
     // --- EXAMINATION MODAL ---
+    function toggleVacDateInput() {
+      const chk = document.getElementById('chkVac').checked;
+      const wrap = document.getElementById('vacDateWrap');
+      if (chk) {
+        wrap.classList.remove('hidden');
+        if (!document.getElementById('vacStartDate').value) {
+          document.getElementById('vacStartDate').value = getLocalDateISO();
+        }
+      } else {
+        wrap.classList.add('hidden');
+      }
+    }
+
     function openExamModal(id) {
       const p = patients.find(x => String(x.id) === String(id));
       if(!p) return;
@@ -561,6 +675,18 @@
       document.getElementById('eOE').value = p.oe || '';
       document.getElementById('ePA').value = p.pa || '';
       document.getElementById('eLE').value = p.le || '';
+
+      document.getElementById('chkAnalPack').checked = !!p.analPack;
+      document.getElementById('chkScrotal').checked = !!p.scrotalSupport;
+      document.getElementById('chkVac').checked = !!p.vacActive;
+      if (p.vacActive && p.vacDate) {
+        document.getElementById('vacStartDate').value = p.vacDate;
+        document.getElementById('vacDateWrap').classList.remove('hidden');
+      } else {
+        document.getElementById('vacStartDate').value = getLocalDateISO();
+        document.getElementById('vacDateWrap').classList.add('hidden');
+      }
+
       document.getElementById('mExam').classList.add('active');
     }
     async function saveExam() {
@@ -573,11 +699,17 @@
         p.oe = document.getElementById('eOE').value.trim();
         p.pa = document.getElementById('ePA').value.trim();
         p.le = document.getElementById('eLE').value.trim();
+
+        p.analPack = document.getElementById('chkAnalPack').checked;
+        p.scrotalSupport = document.getElementById('chkScrotal').checked;
+        p.vacActive = document.getElementById('chkVac').checked;
+        p.vacDate = p.vacActive ? (document.getElementById('vacStartDate').value || getLocalDateISO()) : '';
+
         saveToStorage(); updateUI(); closeModals();
       }
     }
 
-    // --- LABS, C/S & IMAGING MODAL ---
+    // --- LABS & SCANS MODAL ---
     function openLabsModal(id) {
       const p = patients.find(x => String(x.id) === String(id));
       if(!p) return;
@@ -599,11 +731,38 @@
       }
     }
 
+    // --- OPINION MODAL ---
+    function openOpinionModal(id) {
+      const p = patients.find(x => String(x.id) === String(id));
+      if(!p) return;
+      document.getElementById('opinionPatientId').value = p.id;
+      document.getElementById('opinionModalTitle').innerText = `👥 Opinion: ${p.name}`;
+      document.getElementById('opDeptSelect').value = 'ENT';
+      document.getElementById('opReason').value = '';
+      document.getElementById('opAdvice').value = '';
+      document.getElementById('mOpinion').classList.add('active');
+    }
+    async function saveOpinion() {
+      const id = document.getElementById('opinionPatientId').value;
+      const p = patients.find(x => String(x.id) === String(id));
+      if(p) {
+        const dept = document.getElementById('opDeptSelect').value;
+        const reason = document.getElementById('opReason').value.trim();
+        const advice = document.getElementById('opAdvice').value.trim();
+        if(!advice) { alert("Please enter advice notes."); return; }
+
+        if(!p.opinions) p.opinions = [];
+        p.opinions.push({ dept, reason: reason || 'Evaluation', advice });
+        saveToStorage(); updateUI(); closeModals();
+      }
+    }
+
     // --- ADMISSION / EDIT MODAL ---
     function openPatientModal(id=null) {
       currentProcedures = [];
       document.getElementById('patientForm').reset();
       document.getElementById('editPatientId').value = '';
+      document.getElementById('admissionDate').value = getLocalDateISO();
       if(id) {
         const p = patients.find(x => x.id === id);
         if(p) {
@@ -614,6 +773,7 @@
           document.getElementById('gender').value = p.sex || 'M';
           document.getElementById('hospitalNo').value = p.hosp || '';
           document.getElementById('admissionNo').value = p.adm || '';
+          document.getElementById('admissionDate').value = p.admissionDate || getLocalDateISO();
           document.getElementById('diagnosis').value = p.diag || '';
           document.getElementById('patientPlan').value = p.plan || '';
           currentProcedures = p.surgeries ? [...p.surgeries] : [];
@@ -659,6 +819,7 @@
         sex: document.getElementById('gender').value,
         hosp: document.getElementById('hospitalNo').value.trim(),
         adm: document.getElementById('admissionNo').value.trim(),
+        admissionDate: document.getElementById('admissionDate').value || getLocalDateISO(),
         diag: document.getElementById('diagnosis').value.trim(),
         plan: document.getElementById('patientPlan').value.trim(),
         surgeries: [...currentProcedures],
@@ -671,7 +832,7 @@
         const ix = patients.findIndex(x => String(x.id) === String(id));
         if(ix !== -1) patients[ix] = { ...patients[ix], ...data };
       } else {
-        Object.assign(data, { createdAt: Date.now(), complaints: '', bladder: '', bowel: '', bp: '', pr: '', cbg: '', cbgType: '', rt: '', dt: '', jp: '', io: '', oe: '', pa: '', le: '', diet: '', dietSp: '', antibiotics: [], otherOrd: '', labsSummary: '', culture: '', imaging: '', dischargeDate: '' });
+        Object.assign(data, { createdAt: Date.now(), complaints: '', bladder: '', bowel: '', bp: '', pr: '', cbg: '', cbgType: '', rt: '', dt: '', jp: '', io: '', oe: '', pa: '', le: '', analPack: false, scrotalSupport: false, vacActive: false, vacDate: '', diet: '', dietSp: '', antibiotics: [], otherOrd: '', labsSummary: '', culture: '', imaging: '', opinions: [], dischargeDate: '' });
         patients.push(data);
         activeId = data.id;
       }
@@ -711,20 +872,21 @@
     }
 
     function exportCensusCSV() {
-      let csv = "Hospital No,Admission No,Patient Name,Age,Sex,Diagnosis,Procedures,Ward,Status,Discharge Date\n";
+      let csv = "Hospital No,Admission No,Patient Name,Sex,Age,Diagnosis,Procedure,Date of Admission,Date of Procedure,Date of Discharge,Status\n";
       patients.forEach(p => {
         const hosp = `"${p.hosp || ''}"`;
         const adm = `"${p.adm || ''}"`;
         const name = `"${p.name || ''}"`;
-        const age = `"${p.age || ''}"`;
         const sex = `"${p.sex || ''}"`;
+        const age = `"${p.age || ''}"`;
         const diag = `"${p.diag || ''}"`;
         const surgs = Array.isArray(p.surgeries) ? p.surgeries : [];
         const proc = `"${surgs.map(s => s.name).join('; ')}"`;
-        const ward = `"${p.ward || ''}"`;
+        const doa = `"${p.admissionDate || ''}"`;
+        const dop = `"${surgs.map(s => s.date).join('; ')}"`;
+        const dod = `"${p.dischargeDate || ''}"`;
         const status = `"${p.ward === 'Discharged' ? 'Discharged' : 'Active'}"`;
-        const dDate = `"${p.dischargeDate || ''}"`;
-        csv += `${hosp},${adm},${name},${age},${sex},${diag},${proc},${ward},${status},${dDate}\n`;
+        csv += `${hosp},${adm},${name},${sex},${age},${diag},${proc},${doa},${dop},${dod},${status}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
@@ -781,9 +943,10 @@
                 ${p.plan ? `<div class="mt-1 text-[11px] text-teal-800"><strong>Plan:</strong> ${p.plan}</div>` : ''}
               </div>
               <div class="flex flex-col gap-1 items-end">
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-1 flex-wrap justify-end">
                   <button type="button" onclick="event.stopPropagation(); openExamModal(${p.id})" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer border border-indigo-200"><i class="fa-solid fa-notes-medical mr-1"></i>Exam</button>
                   <button type="button" onclick="event.stopPropagation(); openLabsModal(${p.id})" class="bg-purple-50 hover:bg-purple-100 text-purple-700 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer border border-purple-200"><i class="fa-solid fa-file-waveform mr-1"></i>Scans</button>
+                  <button type="button" onclick="event.stopPropagation(); openOpinionModal(${p.id})" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer border border-amber-200"><i class="fa-solid fa-user-doctor mr-1"></i>Opinion</button>
                   <button type="button" onclick="event.stopPropagation(); openPatientModal(${p.id})" class="bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded font-semibold text-[11px] cursor-pointer">Edit</button>
                 </div>
                 <button type="button" onclick="event.stopPropagation(); dischargePatient(${p.id})" class="text-rose-600 hover:text-rose-800 text-[10px] font-bold cursor-pointer mt-1">Discharge</button>
@@ -839,11 +1002,29 @@
       
       if (p.oe) lines.push(`O/E: ${p.oe}`);
       if (p.pa) lines.push(`P/A: ${p.pa}`);
-      if (p.le) lines.push(`L/E: ${p.le}`);
+
+      // L/E construction with special checks
+      let leParts = [];
+      if (p.le) leParts.push(p.le);
+      if (p.analPack) leParts.push("Anal Pack Insitu");
+      if (p.scrotalSupport) leParts.push("Scrotal Support Insitu");
+      if (p.vacActive) {
+        const vacDays = calcAbxDay(p.vacDate); // reuse day calculator
+        leParts.push(`VAC Insitu and Functional (D${vacDays})`);
+      }
+      if (leParts.length) {
+        lines.push(`L/E: ${leParts.join(', ')}`);
+      }
 
       if (p.labsSummary) lines.push(`LABS:\n${p.labsSummary}`);
       if (p.culture) lines.push(p.culture);
       if (p.imaging) lines.push(p.imaging);
+
+      if (Array.isArray(p.opinions) && p.opinions.length > 0) {
+        p.opinions.forEach(op => {
+          lines.push(`${op.dept} OPINION i/v/o ${op.reason}:\n${op.advice}`);
+        });
+      }
 
       return lines.join('\n');
     }
